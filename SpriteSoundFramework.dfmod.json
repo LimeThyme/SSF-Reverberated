@@ -1,0 +1,19 @@
+{
+    "ModTitle": "Sprite Sound Framework",
+    "ModVersion": "1.1",
+    "ModAuthor": "MasterRoshieHehe",
+    "ContactInfo": "https://discord.gg/sjggDRc6fY",
+    "DFUnity_Version": "1.1.1",
+    "ModDescription": "Attach Sounds To Sprites",
+    "GUID": "3ae1e0cc-55a4-48b6-82e0-b4a97b217094",
+    "Files": [
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSoundKeyResolver.cs",
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSoundManager.cs",
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSoundIdentity.cs",
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSoundFramework.dfmod.json",
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSound_NPCFRPatch.cs",
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSoundConfig.cs",
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSoundEmitter.cs",
+        "Assets/Game/Mods/SpriteSoundFramework/SpriteSound_DFUIntegration.cs"
+    ]
+}
