@@ -49,19 +49,12 @@ Existing musician JSONs work without edits. These optional fields are merged int
 each sprite's existing JSON; preserve its volume, distance and other settings:
 
 ```json
-
 {
-
   "isMusician": true,
-
   "loop": true,
-
   "musicianSyncGroup": "",
-
   "musicianGroupRadius": 12.0
-
 }
-
 ```
 
 - Empty group labels enable automatic grouping of nearby musicians. Different
@@ -149,6 +142,10 @@ No installed project or game files were modified while preparing this package.
 
 The musician implementation remains the latest tested experiment. The prior
 four-member test was successful.
+
+However, should you not want to build the mod yourself, a prebuilt copy for WIN/OSX/LINUX64
+has been provided for you under `Builds/StandaloneLinux64`, `Builds/StandaloneOSX`, and
+`Builds/StandaloneWindows`.
 
 ## Validation
 
