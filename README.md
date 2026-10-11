@@ -177,7 +177,7 @@ to the previous unified build. No new playback feature or fix is claimed.
 
 ## Original-source comparison update
 
-The source comments and [SOURCE-CHANGES.md](SOURCE-CHANGES.md) now use your supplied original SSF files.
+The source comments and [SOURCE-CHANGES.md](SOURCE-CHANGES.md) now use the supplied original SSF files.
 Identity/key resolution are unchanged; Harmony behavior is unchanged apart from
 log routing. Generation/range ownership safeguards and local ensemble coordination
 are verified deviations. This update changes documentation only.
