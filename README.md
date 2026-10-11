@@ -1,4 +1,4 @@
-# Sprite Sound Framework — unified patched source
+# Sprite Sound Framework — Reverberated
 
 Version **1.4.1**. See [CHANGELOG.txt](CHANGELOG.txt) for the version history from 1.1 through 1.4.1.
 One build now supplies the latest musician synchronization and optional logging.
