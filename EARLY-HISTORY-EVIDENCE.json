@@ -1,0 +1,153 @@
+{
+  "reference_directory": "F:\\Users\\Sergio\\Downloads\\Daggerfall Source Code\\Mod Source Code\\Untracked Unity Source\\SpriteSoundFramework-main",
+  "zip_sha256": "2fa37fe91fac04090dcd7d8f959b11d29b526c85254ab8317bc665fb1a06d5fd",
+  "zip_version": "1.1",
+  "endpoint_version": "1.3.8",
+  "original_zip_source_hashes": {
+    "SpriteSound_NPCFRPatch.cs": "dc4fdbf33f8d8b1f9d2bb210de3bc3602f90279a0757eef599c83a23b6d4184c",
+    "SpriteSoundConfig.cs": "3f023a5d7bb00761e2b6a6b794959ab529fed2df2467173f37e403cf4e4c1fd9",
+    "SpriteSoundEmitter.cs": "7b1bca843f351bb23d78883b5eee41eedc3c541a605f143cd5b047a76923702f",
+    "SpriteSoundIdentity.cs": "1696fb6e81e087b0582b22c3fdcb5369ec4649fba59f6c61a1adce9163186035",
+    "SpriteSoundKeyResolver.cs": "e00e8a5b9345bf7d75203e32b0ffc4d63e53d8e9b8896e84be6ac7e74fdb1b56",
+    "SpriteSoundManager.cs": "e33f290779f5482c18e83b63c564434158a7a949ea90caca301b5d730e8b7fb5",
+    "SpriteSound_DFUIntegration.cs": "e5b359ef77297a52de504050989c2f588e8c922abd27b78210c24d9172e68bf2"
+  },
+  "endpoint_source_hashes": {
+    "SpriteSound_DFUIntegration.cs": "e6a4c41eff08c425ed916b11c4729205c4d7605919854f7a204df326e13600ea",
+    "SpriteSound_NPCFRPatch.cs": "9646f5cc263609b990be537bf68f1dbade13d859e25060223a5940b75947f8d2",
+    "SpriteSoundConfig.cs": "b9ce1272d98e9fcadc7e01c50d85219fbfc3f6b400d11b20c4af2fd1439ef0ff",
+    "SpriteSoundEmitter.cs": "ad2024b82f19fcf91469d47c9b25f2d01eae9cdafd959076f40552762ed2cc17",
+    "SpriteSoundIdentity.cs": "fe3254a790eb107ed86deca7fcf63ce0b4e1c67fafb32c5a0e4cf21d4e0ae23f",
+    "SpriteSoundKeyResolver.cs": "fca72eeae4d5210f4f4514eb9bb38baa183fc35f888428c262f08ce9edcbf552",
+    "SpriteSoundManager.cs": "2416268d847ede1349d1506763fefebf582a08f1bec36dac09a4c593a1b1baa6"
+  },
+  "backups_compared_to_current_source": [
+    {
+      "backup": "SpriteSound_DFUIntegration.cs.bak.og",
+      "sha256": "c515b8c62375f01fe044fb5897451e900828e0a21072f4e1531b1719edd64027",
+      "modified_local": "2026-06-15T13:25:35",
+      "compared_to": "SpriteSound_DFUIntegration.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 10,
+      "diff_removed_lines": 12
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.06-15-2026",
+      "sha256": "6c1825a9c110e448de8298a290f86ecdb902967ba110d6f56273f412f4bc5212",
+      "modified_local": "2026-06-15T13:25:35",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 2065,
+      "diff_removed_lines": 162
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.09-28-2026",
+      "sha256": "8179678b81d6614ad2c67ac50f60a014bbe24750d17bb34343b2a40fd8531111",
+      "modified_local": "2026-09-28T12:40:11.361188",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 1933,
+      "diff_removed_lines": 189
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.09-28-2026-1515",
+      "sha256": "042dc867a3274ffbd82a5f6966906d539eb20c46ceabf9dda5bea2573eef69ee",
+      "modified_local": "2026-10-01T00:54:47.310023",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 1372,
+      "diff_removed_lines": 239
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.10-01-2026-0619",
+      "sha256": "aacebb098cf006f4c53d5f6c5604f3443e7c90a52a2eb269b245edf5f4d53056",
+      "modified_local": "2026-10-01T06:20:03.608186",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 1199,
+      "diff_removed_lines": 241
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.10-01-2026-0902",
+      "sha256": "a5a1f8a72e89802f508661d6ead1342446dbb9da8c2117a4a1360308968db915",
+      "modified_local": "2026-10-01T09:03:07.743278",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 1053,
+      "diff_removed_lines": 184
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.10-03-2026-0519",
+      "sha256": "d216c6a3b930a82195e175767f6f81d69a1bf1a7925909b060b20d08c8da16d9",
+      "modified_local": "2026-10-04T05:19:25.565643",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 357,
+      "diff_removed_lines": 62
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.10-03-2026-1027",
+      "sha256": "1c5895e831b72e2ab3b0ea23788b6953c912d1d9dd40e16c414d222c411c4c81",
+      "modified_local": "2026-10-04T10:27:22.032050",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 141,
+      "diff_removed_lines": 25
+    },
+    {
+      "backup": "SpriteSoundEmitter.cs.bak.10-03-2026-1106",
+      "sha256": "1498d0447fc345814e7b188f2bbedca0a1d63cb37b2d2fbd756a32b733202606",
+      "modified_local": "2026-10-04T11:07:04.490306",
+      "compared_to": "SpriteSoundEmitter.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 142,
+      "diff_removed_lines": 102
+    },
+    {
+      "backup": "SpriteSoundManager.cs.bak.06-15-2026",
+      "sha256": "9dcf47d8bab2df4c8c899473ca35c5bfe478924487990dd4519f91070586c7db",
+      "modified_local": "2026-10-01T03:19:55.886179",
+      "compared_to": "SpriteSoundManager.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 10,
+      "diff_removed_lines": 0
+    },
+    {
+      "backup": "SpriteSoundManager.cs.bak.10-01-2026-1056",
+      "sha256": "2416268d847ede1349d1506763fefebf582a08f1bec36dac09a4c593a1b1baa6",
+      "modified_local": "2026-10-01T10:56:16.286822",
+      "compared_to": "SpriteSoundManager.cs",
+      "identical_bytes": true,
+      "identical_text_after_newline_normalization": true,
+      "diff_added_lines": 0,
+      "diff_removed_lines": 0
+    },
+    {
+      "backup": "SpriteSoundManager.cs.bak.10-01-2026-1108",
+      "sha256": "1c1d3d673e7f60941c3080c4330ca93855219088352b12712908eea3f9b521e6",
+      "modified_local": "2026-10-04T11:08:28.789168",
+      "compared_to": "SpriteSoundManager.cs",
+      "identical_bytes": false,
+      "identical_text_after_newline_normalization": false,
+      "diff_added_lines": 0,
+      "diff_removed_lines": 24
+    }
+  ],
+  "verification": [
+    "All seven ZIP sources have identical C# tokens to earlier supplied original sources.",
+    "Config, Identity, KeyResolver and NPCFRPatch retain original ZIP code tokens at endpoint.",
+    "All seven endpoint files match both previously preserved tested-baseline ZIPs byte-for-byte.",
+    "All 12 backups and 7 endpoint files passed syntax parsing; no historical compilation or gameplay run performed."
+  ],
+  "version_mapping_limit": "Intermediate backups do not contain release manifests; no inferred 1.2/1.3.x labels assigned."
+}

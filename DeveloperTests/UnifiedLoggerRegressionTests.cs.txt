@@ -1,0 +1,53 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using SpriteSoundFramework;
+namespace UnityEngine
+{
+    public static class Application { public static event Action quitting; public static void Quit() { if(quitting!=null) quitting(); } }
+    public static class Debug {
+        public static List<string> Messages=new List<string>();
+        public static void Log(string s){Messages.Add("INFO "+s);}
+        public static void LogWarning(string s){Messages.Add("WARN "+s);}
+        public static void LogError(string s){Messages.Add("ERROR "+s);}
+    }
+}
+class LocalLoggerTests
+{
+    static int checks;
+    static void Check(bool b,string s){if(!b)throw new Exception(s); checks++;Console.WriteLine("PASS "+s);}
+    static string Read(string p){using(var r=new StreamReader(new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.ReadWrite)))return r.ReadToEnd();}
+    static void Main(){
+        string root=Path.GetFullPath("work/local-logger-tests-"+Guid.NewGuid().ToString("N"));
+        string mods=Path.Combine(root,"custom Mods","nested mod");
+        string dir=Path.Combine(mods,"SSF","Logs"),cur=Path.Combine(dir,"SSF.log"),prev=Path.Combine(dir,"SSF-prev.log");
+        SpriteSoundLog.BeginSession(mods, true);SpriteSoundLog.Info("run one {literal} Ω");
+        SpriteSoundLog.Warning("warning");SpriteSoundLog.Error("error");
+        Check(File.Exists(cur)&&!File.Exists(prev),"Creates log under supplied mod directory");
+        Check(Read(cur).Contains("run one {literal} Ω")&&Read(cur).Contains("[ERROR] error"),"Immediate flush, Unicode, literal braces and severity");
+        SpriteSoundLog.BeginSession(mods, true);
+        Check(!File.Exists(prev)&&Read(cur).Contains("run one"),"Duplicate initialization does not rotate");
+        UnityEngine.Application.Quit();string first=Read(cur);
+        Check(first.Contains("logging ended"),"Quit closes and ends session");
+        SpriteSoundLog.BeginSession(mods, true);SpriteSoundLog.Info("run two");SpriteSoundLog.EndSession();
+        Check(Read(prev)==first&&!Read(cur).Contains("run one"),"Second run preserves exact first run");
+        string second=Read(cur);
+        SpriteSoundLog.BeginSession(mods, true);SpriteSoundLog.Info("run three");SpriteSoundLog.EndSession();
+        Check(Read(prev)==second&&Directory.GetFiles(dir).Length==2,"Third run keeps only current and immediately previous");
+        string third=Read(cur);
+        using(var hold=new FileStream(cur,FileMode.Open,FileAccess.ReadWrite,FileShare.Read)) {
+            UnityEngine.Debug.Messages.Clear();SpriteSoundLog.BeginSession(mods, true);SpriteSoundLog.Error("locked fallback");
+            Check(UnityEngine.Debug.Messages.Contains("ERROR locked fallback")&&Read(prev)==second,"Locked current file falls back without rotating previous");
+            SpriteSoundLog.EndSession();
+        }
+        using(var hold=new FileStream(prev,FileMode.Open,FileAccess.ReadWrite,FileShare.Read)) {
+            SpriteSoundLog.BeginSession(mods, true);SpriteSoundLog.EndSession();
+            Check(Read(cur)==third,"Failed backup leaves current run intact");
+        }
+        UnityEngine.Debug.Messages.Clear();SpriteSoundLog.BeginSession(null, true);SpriteSoundLog.Warning("missing path");SpriteSoundLog.EndSession();
+        Check(UnityEngine.Debug.Messages.Count(x=>x.Contains("Dedicated logging unavailable"))==1&&UnityEngine.Debug.Messages.Contains("WARN missing path"),"Missing mod path falls back once without guessing directory");
+        Check(Read(cur)==third&&Read(prev)==second,"Failure cases preserve both saved logs");
+        Console.WriteLine(checks+" filesystem checks passed; no gameplay simulated.");
+    }
+}

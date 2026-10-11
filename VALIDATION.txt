@@ -1,0 +1,24 @@
+Original-source documentation review (2026-10-10):
+Reference: seven user-supplied originals; exact hashes in SOURCE-CHANGES.md.
+Full current source compilation against installed Unity/DFU assemblies: PASS.
+Roslyn executable-token comparison against pre-review source: all 9 files unchanged, no exceptions.
+Original method comparison: included as ORIGINAL-METHOD-COMPARISON.txt.
+This review changes comments and documentation only. No new gameplay test needed or performed.
+
+Previously completed validation (not rerun in this documentation-only review):
+Logging toggle checks: 13 passed, including distinct first-open/resume headers.
+Logger filesystem regression checks: 10 passed.
+DFU settings deserialization: passed.
+Conductor tests: 19 passed.
+Supplied gameplay log confirmed live logging off/on and same-file append.
+The previously observed Tavern timing offset remains unproven as fixed.
+
+This is a source package, not a newly built dfmod. Installed game/project files were not changed.
+
+Version-history update: ModVersion corrected to 1.4.1; CHANGELOG.txt added.
+Manifest JSON and asset references verified; all nine C# hashes unchanged.
+Source ZIP rebuilt and integrity checked. No new compilation/gameplay run for this metadata-only update.
+
+Early-history documentation update: original 1.1 ZIP, 12 backup files and 7 endpoint files compared.
+Endpoint byte matches both preserved 1.3.8 baselines. Historical snapshots parsed; not compiled or gameplay-tested.
+All 9 current source hashes and manifest version 1.4.1 remain unchanged.

@@ -1,0 +1,20 @@
+{
+    "ModTitle": "Sprite Sound Framework - Reverberated",
+    "ModVersion": "1.4.1",
+    "ModAuthor": "Codex, MasterRoshieHehe, Clerical Error",
+    "ContactInfo": "https://discord.gg/NCrDfzSMpz",
+    "DFUnity_Version": "1.1.1",
+    "ModDescription": "DISCLAIMER: Generative AI was used to create/patch this mod. Adds configurable sounds to sprites, stabilizes animal playback, and improves sound handling during pauses, movement, and scene changes. Nearby musicians play compatible songs together with synchronized timing. Optional diagnostic logging can be enabled in Mod Options, keeping the two most recent logs in the Mods folder under `SSF/Logs`.",
+    "GUID": "3ae1e0cc-55a4-48b6-82e0-b4a97b217094",
+    "Files": [
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundEnsembles.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundKeyResolver.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSound_DFUIntegration.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundManager.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundIdentity.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundLog.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSound_NPCFRPatch.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundEmitter.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundConfig.cs"
+    ]
+}

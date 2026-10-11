@@ -1,0 +1,18 @@
+{
+    "Version": "1",
+    "Sections": [
+        {
+            "Name": "Options",
+            "Description": "",
+            "IsAdvanced": false,
+            "Keys": [
+                {
+                    "$type": "DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings.ToggleKey",
+                    "Name": "Enable Mod Logging",
+                    "Description": "Creates separate log file directory in the Mods Folder under 'SSF/Logs'. Used for diagnosing issues with the mod.",
+                    "Value": false
+                }
+            ]
+        }
+    ]
+}

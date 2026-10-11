@@ -1,0 +1,37 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using SpriteSoundFramework;
+namespace UnityEngine
+{
+    public static class Application { public static event Action quitting; public static void Quit() { if(quitting!=null) quitting(); } }
+    public static class Debug {
+        public static List<string> Messages=new List<string>();
+        public static void Log(string s){Messages.Add("INFO "+s);}
+        public static void LogWarning(string s){Messages.Add("WARN "+s);}
+        public static void LogError(string s){Messages.Add("ERROR "+s);}
+    }
+}
+
+class ToggleTests {
+ static int checks;
+ static void Check(bool b,string s){if(!b)throw new Exception(s);checks++;Console.WriteLine("PASS "+s);}
+ static string Read(string p){using(var r=new StreamReader(new FileStream(p,FileMode.Open,FileAccess.Read,FileShare.ReadWrite)))return r.ReadToEnd();}
+ static void Main(){
+ string root=Path.GetFullPath("work/toggle-tests-"+Guid.NewGuid().ToString("N"));string dir=Path.Combine(root,"SSF","Logs"),cur=Path.Combine(dir,"SSF.log"),prev=Path.Combine(dir,"SSF-prev.log");
+ SpriteSoundLog.BeginSession(root);SpriteSoundLog.Info("hidden");
+ Check(!SpriteSoundLog.Enabled&&!Directory.Exists(dir)&&UnityEngine.Debug.Messages.Count==0,"Off default creates no directory and no routine Unity messages");
+ SpriteSoundLog.SetEnabled(true);SpriteSoundLog.Info("first interval");Check(Read(cur).Contains("first interval"),"Enable opens and writes immediately");
+ SpriteSoundLog.SetEnabled(false);string saved=Read(cur);SpriteSoundLog.Info("hidden again");Check(Read(cur)==saved,"Disabled interval does not write");
+ using(var f=new FileStream(cur,FileMode.Open,FileAccess.ReadWrite,FileShare.None))Check(true,"Disable closes file handle");
+ SpriteSoundLog.SetEnabled(true);SpriteSoundLog.Info("second interval");Check(Read(cur).Split(new[]{"# SSF log session opened "},StringSplitOptions.None).Length==2 && Read(cur).Contains("# SSF logging resumed (same session) "),"Exactly one session header; re-enable says resumed");Check(Read(cur).Contains("first interval")&&Read(cur).Contains("second interval")&&!File.Exists(prev),"Re-enable appends without rotating");
+ SpriteSoundLog.SetEnabled(true);Check(!File.Exists(prev),"Repeated setting application is idempotent");
+ SpriteSoundLog.EndSession();saved=Read(cur);SpriteSoundLog.SetEnabled(true);SpriteSoundLog.Info("late");Check(Read(cur)==saved&&!SpriteSoundLog.Enabled,"Teardown cannot be re-enabled");
+ SpriteSoundLog.BeginSession(root);SpriteSoundLog.EndSession();Check(Read(cur)==saved&&!File.Exists(prev),"Entire disabled run preserves old logs");
+ SpriteSoundLog.BeginSession(root);SpriteSoundLog.SetEnabled(true);Check(Read(prev)==saved,"Next enabled run rotates exactly once");SpriteSoundLog.SetEnabled(false);
+ UnityEngine.Debug.Messages.Clear();SpriteSoundLog.Warning("actionable warning");SpriteSoundLog.Error("actionable error");SpriteSoundLog.Info("hidden");Check(UnityEngine.Debug.Messages.SequenceEqual(new[]{"WARN actionable warning","ERROR actionable error"}),"Disabled diagnostics preserve only operational warnings/errors in Unity");SpriteSoundLog.EndSession();
+ SpriteSoundLog.BeginSession(null);UnityEngine.Debug.Messages.Clear();SpriteSoundLog.SetEnabled(true);Check(UnityEngine.Debug.Messages.Any(m=>m.Contains("Dedicated logging unavailable")),"Enabled failure still falls back");SpriteSoundLog.SetEnabled(false);UnityEngine.Debug.Messages.Clear();SpriteSoundLog.Info("hidden fallback");Check(UnityEngine.Debug.Messages.Count==0,"Disabling also stops fallback diagnostics");SpriteSoundLog.EndSession();
+ Console.WriteLine(checks+" toggle checks passed.");
+ }
+}

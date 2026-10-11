@@ -1,0 +1,252 @@
+SPRITE SOUND FRAMEWORK - EARLY DEVELOPMENT CHANGELOG
+1.1 TO 1.3.8
+
+REFERENCE AND VERSION BOUNDARIES
+
+This history compares SpriteSoundSource.zip, every .cs.bak.* text backup (excluding
+Unity .meta files), and the seven current .cs files in the supplied
+Untracked Unity Source/SpriteSoundFramework-main folder.
+
+The ZIP's manifest explicitly says 1.1. The folder's manifest explicitly says
+1.3.8. No intermediate release manifests establish which snapshot was called 1.2,
+1.3, or 1.3.1 through 1.3.7. The entries below therefore use the actual backup
+labels. They describe changes present BY each snapshot, not exact edit times or
+invented release numbers. Backups of different files are not complete releases.
+
+Some labels and disk dates conflict. In particular, the emitter backups labelled
+10-03 were last modified on October 4, and the manager backup labelled
+10-01-2026-1108 was last modified on October 4. Copying or renaming can affect
+these dates. The labels are retained exactly; the code differences are the evidence.
+
+All seven current .cs files are byte-for-byte identical to both previously saved
+Codex tested-baseline archives. Consequently, this folder reaches the tested 1.3.8
+endpoint, including the ownership and pause changes documented there. It cannot
+be used to assign every change exclusively to the pre-Codex period.
+
+1.1 - ORIGINAL RELEASE
+Source: SpriteSoundSource.zip. Creator attribution supplied by the maintainer:
+MasterRoshiHeHe and AI; the manifest spells the author as MasterRoshieHehe.
+
+Features already present in this release:
+- Attached positional sound to sprites and billboards using WAV files and per-key
+  JSON configuration under StreamingAssets/Sound/SpriteSounds.
+- Supported looping sounds, randomized variants, musician tracks, volume, minimum
+  and maximum distance, linear/logarithmic distance attenuation, and sound triggers
+  tied to animation frames. Frame triggers already used a serializable list.
+- Indexed available WAV and JSON files at startup and cached loaded clips and
+  configurations to avoid repeatedly reading the same data.
+- Resolved sound identities from saved identity tags, texture names, or vanilla
+  archive/record numbers. Included NPC Flat Replacer/material compatibility hooks.
+- Discovered sprites through startup/transition scans and periodic scans in
+  exteriors, dungeons and castles. The later patches did not invent this scanner.
+- Attempted musician synchronization with one global song suffix and audio-clock
+  start time. Each musician sought into that common timeline when its clip loaded.
+- Used four visibility checks and a low-pass filter to muffle obstructed sounds.
+- Forwarded game pause changes from the manager to each emitter.
+
+Original limitations relevant to later work:
+- SSF used the AudioSource on the billboard itself, allowing another component
+  controlling that source to interfere with playback.
+- Reinitializing an emitter stopped playback. Rediscovery could reactivate it,
+  while enabling an object could immediately start its playlist.
+- Loads did not carry a cancellation ticket to reject obsolete playback sessions.
+- Range handling disabled the source outside the limit, except in small interiors.
+- Musician selection was global rather than per-stage, and the random selection
+  helper could update that shared state for an ordinary randomized sound.
+- Loaded clips WERE assigned before playback. The missing assignment seen later
+  was an intermediate patch regression, not a defect in this original release.
+
+ORIGINAL BACKUP CHECKPOINTS - NO FUNCTIONAL CHANGE
+Sources: SpriteSoundEmitter.cs.bak.06-15-2026,
+SpriteSoundManager.cs.bak.06-15-2026, SpriteSound_DFUIntegration.cs.bak.og.
+
+These preserve their respective original ZIP source after text normalization.
+The seven original files supplied in the earlier comparison also have identical
+C# tokens to the ZIP's seven source files. Raw file hashes can differ because of
+line endings; that does not establish a code change.
+
+BY EMITTER SNAPSHOT 09-28-2026 - CONTROL WHEN PLAYBACK STARTS
+
+- Added a single active-playlist flag to avoid launching another playlist while
+  one was already loading or playing.
+- Added explicit in-range state. Initialization and reactivation checked distance
+  before starting a loop, instead of starting every discovered sound immediately.
+- Deferred the playback check by one frame after an object was enabled, allowing
+  scene activation to settle before nearby sounds were considered.
+- Stopped playback when the component was disabled and reacquired the player
+  transform when it was not yet available.
+- Used a temporary logarithmic playback limit of twice maxDistance plus two units.
+  Updated the outer volume fade to fit that shorter test range.
+- Made the update path depend on the explicit range state. Range exit stopped
+  playback rather than using source disabling as the normal range mechanism.
+
+Purpose: reduce competing starts during transitions and prevent distant sprites
+from requesting playback unnecessarily. At this point, range return could still
+restart a loop from its beginning. Later snapshots refined this approach.
+
+DFU INTEGRATION CHANGE - PRESENT IN THE CURRENT FOLDER
+Source: SpriteSound_DFUIntegration.cs versus its .bak.og backup.
+
+- Changed repeated discovery of an already configured, same-key sprite to leave
+  its emitter alone. The scanner no longer called Reactivate every time.
+- Retained reinitialization when a pooled object's sound key actually changed.
+- Left scan intervals, save/transition hooks and manager creation unchanged.
+
+Purpose: let the emitter own playback rather than letting routine discovery
+restart it. The file's modification date is September 26, but there is no dated
+intermediate integration backup or release number confirming an exact boundary.
+
+BY EMITTER SNAPSHOT 09-28-2026-1515 - CANCEL OBSOLETE PLAYBACK
+
+- Added a playback generation number: a ticket identifying the current session.
+  Stopping or replacing the session invalidated work carrying an older ticket.
+- Tracked the specific playlist coroutine instead of stopping all coroutines.
+  Old cleanup could no longer clear the state belonging to a newer session.
+- Rechecked the ticket, object activity, source activity and range after loading
+  and before starting playback. Disabled sources were no longer force-enabled.
+- Made initialization with the same key preserve playback and refresh the sensor.
+- Left an already playing, correct fixed-loop clip alone instead of resetting it.
+- Added a two-unit exit margin beyond the entry boundary, reducing rapid start/stop
+  changes when the player hovered near the edge of hearing range.
+- Added extensive comments describing lifecycle ownership and intended safeguards.
+
+Historical regression: this snapshot placed the musician/random playlist block
+inside the fixed-loop branch after a yield break, making that block unreachable.
+That layout persists in the 10-01-2026-0619 backup. The 0902 backup moves the block
+out again. These are development snapshots, not evidence of fully working releases.
+
+BY EMITTER SNAPSHOT 10-01-2026-0619 - PRESERVE RANGE-PAUSED LOOPS
+
+- Added separate flags for distance suspension and manager/game pause.
+- Paused an established source when leaving range so it could continue from its
+  saved position on return. An active loading/playlist coroutine still used a
+  hard stop, so this was not the same treatment for every playback mode.
+- Restricted unpause to a source actually paused by the manager and still eligible
+  to play. Closing a menu should not wake a source still suspended by distance.
+- Increased the logarithmic range multiplier from the temporary 2x to 5x.
+- Added Editor-only messages when Unity changed a source's virtual voice state,
+  reporting identity, playing state, distance, gain and priority.
+
+Purpose: distinguish a temporary pause from the end of a clip and investigate
+whether Unity was advancing a source without mixing it into the audible output.
+
+BY EMITTER SNAPSHOT 10-01-2026-0902 - ALIGN DISTANCE AND OBSTRUCTION
+
+- Separated configured distances from the effective distance assigned to Unity.
+  Logarithmic sources received configured maxDistance x 5 + 2; linear sources
+  retained their configured maximum.
+- Used the effective distance in the main sensor's playback boundary and removed
+  the previous extra outer fade at this stage.
+- Made hard stops call Stop even when isPlaying was false, covering paused sources.
+- Updated Reactivate to use range suspension/resumption instead of always stopping.
+- Replaced raw linecasts with multi-hit ray checks that ignore triggers, the
+  emitter's own colliders, billboards and other emitter colliders.
+- Made virtual-voice diagnostics available outside UNITY_EDITOR builds as well.
+- Corrected the branch placement described above, making the musician/random
+  playback block reachable again.
+
+Remaining regression: that branch still lacked its own audioSource.clip assignment;
+only fixed loops assigned the newly loaded clip. The final 1.3.8 source restores it.
+The helper named HasStaticOccluder filters collider types, not Unity's static flag.
+
+BY MANAGER SNAPSHOT 10-01-2026-1056 - AUDIO DEVICE DIAGNOSTICS
+
+- Logged Unity's configured real voices, virtual voices and sample rate at startup.
+- Left sound indexing, caching, emitter registration and global musician selection
+  unchanged. The final 1.3.8 manager matches this snapshot's text.
+
+Purpose: make device limits visible while investigating cutoffs and virtual voices.
+Reporting a voice limit does not increase it or guarantee an audible source.
+
+BY EMITTER SNAPSHOT 10-03-2026-0519 - CONSISTENT RANGE CALCULATION
+
+- Changed the secondary range helper to use effectiveAudioDistance directly.
+  It had been multiplying an already-expanded AudioSource.maxDistance again,
+  causing disagreement between reactivation and the main sensor.
+- Expanded explanations of distance behavior and the earlier patch decisions.
+
+Purpose: make different playback paths agree about whether a sprite is in range.
+Most of this snapshot's large increase in file size is commentary, not new logic.
+
+BY EMITTER SNAPSHOT 10-03-2026-1027 - SMOOTH FADE AND VOICE PRIORITY
+
+- Added a smooth outer fade for logarithmic sounds before range suspension.
+  The tail is 25 percent of effective distance, clamped to 6-12 world units.
+- Used the end of that tail as the suspension boundary while retaining the
+  additional two-unit exit margin. Linear sounds do not receive this tail.
+- Updated volume before making the range decision, allowing the fade to reach zero.
+- Assigned nearby sources priority 112 and gradually reduced their preference
+  toward priority 220 farther away. In Unity, lower numbers mean higher priority.
+
+Purpose: soften the audible boundary and favor nearby sounds when voices compete.
+The change does not raise Unity's voice capacity or remove its spatial attenuation.
+
+TEMPORARY DUPLICATE-LOOP OFFSET EXPERIMENT
+Sources: emitter .bak.10-03-2026-1106 and manager .bak.10-01-2026-1108.
+
+- Added a manager helper checking whether another initialized emitter shared a key.
+- When a duplicate existed, derived a starting position from the object's instance
+  ID rather than starting that loop at zero. Logged the chosen offset and duration.
+- Kept a single instance starting at zero. Offsets depended on object IDs and were
+  not a coordinated musician arrangement or a persistent save-game schedule.
+
+Purpose: vary the phase of repeated copies of the same ambient loop. This could
+also enter a sound midway through a call. The final source removes both the
+offset helper and duplicate-key manager helper, restoring new loops to time zero.
+This experiment should not appear as a retained feature of 1.3.8 or 1.4.1.
+
+1.3.8 - FINAL SOURCE IN THE SUPPLIED FOLDER
+Changes since the last emitter backup:
+
+- Moved SSF playback onto a dedicated child named SSF Audio with its own source
+  and low-pass filter. Removed the requirement to share the billboard's source.
+- For 201_ animal keys, suspended the native PlayRandomlyIfPlayerNear controller
+  only once a replacement was ready. Saved its prior enabled states and restored
+  them on disable, destruction or identity change.
+- Cleaned up the owned child when the emitter was destroyed.
+- Removed the duplicate-loop start-offset experiment; ordinary new loops start
+  at zero. Existing silence and timing inside WAV files remain intact.
+- Applied DFU's SoundVolume setting to both initial gain and ongoing distance gain.
+- Prevented loop startup or range resumption while paused. After loading, waited
+  for unpause before starting; an active playlist no longer treated pause alone
+  as completion of the current song.
+- Restored clip assignment for the musician/random playlist branch, repairing
+  the intermediate regression without changing the original global sync design.
+- Added generation/range/activity checks around frame-triggered one-shot loading.
+  This does not add the same post-load pause wait used by the loop playlist.
+- Added animal playback traces for starts, stops, range and manager pauses,
+  resumption, native suppression, voice changes and periodic sample observations.
+  Logs included source/object IDs, generation, cursor, gain and state flags.
+- Retained the earlier range margin, smooth fade, voice priority, filtered wall
+  checks, scanner behavior and controlled playlist lifecycle.
+
+Manifest differences from 1.1:
+- Changed the title to Sprite Sound Framework - Patch and version to 1.3.8.
+- Expanded credits and the description to reflect patch work.
+- Changed build asset paths to Assets/Untracked/ModBuilder/SpriteSoundFramework-main.
+- Retained the original mod GUID and DFU target version 1.1.1.
+- Listed the seven source files without listing the manifest itself as an asset.
+
+WHAT DID NOT CHANGE FROM 1.1 TO THIS 1.3.8 ENDPOINT
+
+- SpriteSoundConfig.cs, SpriteSoundIdentity.cs, SpriteSoundKeyResolver.cs and
+  SpriteSound_NPCFRPatch.cs have identical C# tokens to their ZIP originals.
+- Their configuration schema, key lookup order and compatibility hooks are
+  inherited features, not newly added by these patches.
+- The manager's retained change is its audio configuration log. The temporary
+  duplicate-key helper was removed. Global musician state still exists here.
+- Local musician ensembles, the dedicated SSF log files, log rotation and the
+  Mod Options logging checkbox belong to later development, described separately.
+
+VERIFICATION AND LIMITS
+
+Compared all seven ZIP source files, twelve backup text files, and seven endpoint
+source files. C# token checks distinguished code from comments/spacing. All endpoint
+and backup files parsed without syntax errors; this is not compilation or gameplay
+certification. The unreachable intermediate block is a logic/control-flow issue
+and can exist in syntactically valid source.
+
+The endpoint matches both archived tested baselines byte-for-byte. No source,
+backup, installed mod or historical archive was edited for this review. Evidence
+hashes and snapshot inventories are supplied in EARLY-HISTORY-EVIDENCE.json.
+Use this history together with CHANGELOG.txt for the later path through 1.4.1.

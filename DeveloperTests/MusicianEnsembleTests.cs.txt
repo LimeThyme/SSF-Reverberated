@@ -1,0 +1,205 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using SpriteSoundFramework;
+
+// Simulated audio device. The production conductor below is compiled unchanged;
+// these stand-ins let lifecycle and timing tests run without launching Unity.
+namespace UnityEngine
+{
+    public class MonoBehaviour { }
+    public struct Vector3
+    {
+        public float x;
+        public static float Distance(Vector3 a, Vector3 b) { return Math.Abs(a.x-b.x); }
+    }
+    public class Transform { public Vector3 position; }
+    public class AudioClip { public int samples = 480000; public int frequency = 48000; }
+    public static class AudioSettings { public static double dspTime; }
+    public static class Time { public static float realtimeSinceStartup; }
+    public static class Random { public static int Range(int a,int b) { return a; } }
+    public enum AudioType { WAV }
+    public class AudioSource
+    {
+        public AudioClip clip;
+        public double StartTime;
+        public int Starts, Stops, Seek;
+        public bool Active;
+        public bool isVirtual { get { return false; } }
+        public bool isPlaying { get { return Active && AudioSettings.dspTime >= StartTime && timeSamples < clip.samples; } }
+        public int timeSamples { get { return Seek + (int)(Math.Max(0,AudioSettings.dspTime-StartTime)*clip.frequency); } }
+    }
+}
+namespace UnityEngine.Networking
+{
+    public class UnityWebRequest : IDisposable
+    {
+        public static UnityWebRequest Last;
+        public bool isDone, isNetworkError, isHttpError, Aborted, Disposed;
+        public string error;
+        public UnityEngine.AudioClip Result;
+        public void SendWebRequest() { Last=this; }
+        public void Abort() { Aborted=true; }
+        public void Dispose() { Disposed=true; }
+    }
+    public static class UnityWebRequestMultimedia
+    {
+        public static UnityWebRequest GetAudioClip(string path,UnityEngine.AudioType type) { return new UnityWebRequest(); }
+    }
+    public static class DownloadHandlerAudioClip
+    {
+        public static UnityEngine.AudioClip GetContent(UnityWebRequest request) { return request.Result; }
+    }
+}
+namespace SpriteSoundFramework
+{
+    public static class SpriteSoundLog
+    {
+        public static bool Enabled = true;
+        public static List<string> Lines = new List<string>();
+        public static void Info(string text) { Lines.Add(text); }
+    }
+    public class SpriteSoundManager
+    {
+        public Dictionary<string,List<string>> Songs = new Dictionary<string,List<string>>();
+        public Dictionary<string,UnityEngine.AudioClip> Cache = new Dictionary<string,UnityEngine.AudioClip>();
+        public List<string> MusicianSongs(string key) { return Songs[key]; }
+        public bool TryGetCachedClip(string key,out UnityEngine.AudioClip clip) { return Cache.TryGetValue(key,out clip); }
+        public void CacheClip(string key,UnityEngine.AudioClip clip) { Cache[key]=clip; }
+        public string BuildFullPathForKey(string key) { return "C:/ssf-tests/"+key+".wav"; }
+    }
+    public class SpriteSoundEmitter
+    {
+        public int Id;
+        public string Key, EnsembleLabel="";
+        public float EnsembleRadius=12;
+        public int EnsembleScene=1, EnsembleTicket;
+        public bool EnsembleMember=true, EnsembleAudible=true;
+        public UnityEngine.Transform transform=new UnityEngine.Transform();
+        public UnityEngine.AudioSource EnsembleSource=new UnityEngine.AudioSource();
+        public int GetInstanceID() { return Id; }
+        public void StopEnsemble() { EnsembleSource.Active=false; EnsembleSource.Stops++; EnsembleTicket++; }
+        public void ScheduleEnsemble(UnityEngine.AudioClip clip,string key,double at,double seconds)
+        {
+            StopEnsemble(); EnsembleSource.clip=clip; EnsembleSource.Seek=(int)(seconds*clip.frequency);
+            EnsembleSource.StartTime=at; EnsembleSource.Active=true; EnsembleSource.Starts++;
+        }
+    }
+}
+class MusicianEnsembleTests
+{
+    class Rig
+    {
+        internal SpriteSoundManager M=new SpriteSoundManager();
+        internal List<SpriteSoundEmitter> E=new List<SpriteSoundEmitter>();
+        internal SpriteSoundEnsembles C;
+        internal Rig() { Clock(0); SpriteSoundLog.Lines.Clear(); C=new SpriteSoundEnsembles(M); }
+        internal SpriteSoundEmitter Add(string key,float x,params string[] songs)
+        {
+            var e=new SpriteSoundEmitter { Id=E.Count+1,Key=key };
+            e.transform.position=new UnityEngine.Vector3 { x=x }; E.Add(e); M.Songs[key]=songs.ToList();
+            foreach(var song in songs) M.Cache[key+"-"+song]=new UnityEngine.AudioClip();
+            return e;
+        }
+        internal void Step(double now,bool paused=false) { Clock(now); C.Tick(E,paused); }
+        internal void Start() { Step(0); Step(.8); }
+    }
+    static void Clock(double n) { UnityEngine.AudioSettings.dspTime=n; UnityEngine.Time.realtimeSinceStartup=(float)n; }
+    static void Check(bool condition,string message) { if(!condition) throw new Exception(message); }
+    static void Near(double a,double b,string message) { Check(Math.Abs(a-b)<.0001,message+" "+a+" != "+b); }
+    static int count;
+    static void Test(string name,Action run) { run(); count++; Console.WriteLine("PASS "+name); }
+    static void Main()
+    {
+        Test("shared intersection and exact scheduled start",()=>{
+            var r=new Rig(); var a=r.Add("drum",0,"A","B"); var b=r.Add("flute",2,"A"); var c=r.Add("lute",4,"A","C"); r.Start();
+            Check(a.EnsembleSource.clip==r.M.Cache["drum-A"],"must exclude solo song");
+            Near(a.EnsembleSource.StartTime,b.EnsembleSource.StartTime,"flute clock"); Near(b.EnsembleSource.StartTime,c.EnsembleSource.StartTime,"lute clock");
+        });
+        Test("nearby bands respect labels, distant bands stay independent",()=>{
+            var r=new Rig(); var a=r.Add("drum",0,"A"); var b=r.Add("flute",2,"B"); b.EnsembleLabel="other"; var c=r.Add("lute",30,"C"); r.Start();
+            Check(r.E.All(e=>e.EnsembleSource.Starts==1),"three independent bands");
+            Check(SpriteSoundLog.Lines.Count(s=>s.Contains("event=formed"))==3,"band count");
+        });
+        Test("no chain grouping between stages",()=>{
+            var r=new Rig();r.Add("a",0,"A");r.Add("b",10,"A");r.Add("c",20,"A");r.Start();
+            Check(SpriteSoundLog.Lines.Count(s=>s.Contains("event=formed"))==2,"complete link grouping");
+        });
+        Test("disjoint playlists stay silent with one diagnostic",()=>{
+            var r=new Rig();r.Add("a",0,"A");r.Add("b",2,"B");r.Start();r.Step(1);r.Step(2);
+            Check(r.E.All(e=>e.EnsembleSource.Starts==0),"no independent fallback");
+            Check(SpriteSoundLog.Lines.Count(s=>s.Contains("event=blocked"))==1,"no log spam");
+        });
+        Test("pause freezes cursor, resume schedules together",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A");var b=r.Add("b",1,"A");r.Start();r.Step(4,true);r.Step(20,true);
+            Check(!a.EnsembleSource.Active && !b.EnsembleSource.Active,"paused sources"); r.Step(21);
+            Near(a.EnsembleSource.Seek/48000.0,3.05,"pause cursor");Near(a.EnsembleSource.StartTime,b.EnsembleSource.StartTime,"resume clock");
+        });
+        Test("pause before scheduled start retains zero cursor",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A");r.Start();r.Step(.9,true);r.Step(5);
+            Check(a.EnsembleSource.Seek==0,"not started before pause");Near(a.EnsembleSource.StartTime,5.15,"new scheduled start");
+        });
+        Test("range re-entry seeks song and does not restart bandmate",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A");var b=r.Add("b",1,"A");r.Start();a.EnsembleAudible=false;r.Step(2);a.EnsembleAudible=true;r.Step(3);
+            Near(a.EnsembleSource.Seek/48000.0,2.2,"late arrival cursor");Check(b.EnsembleSource.Starts==1,"bandmate preserved");
+        });
+        Test("shared song changes once after completion",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A","B");var b=r.Add("b",1,"A","B");r.Start();r.Step(11);
+            Check(a.EnsembleSource.clip==r.M.Cache["a-B"] && b.EnsembleSource.clip==r.M.Cache["b-B"],"both advance to B");
+            Near(a.EnsembleSource.StartTime,b.EnsembleSource.StartTime,"next song clock");
+        });
+        Test("length mismatch rejected before any playback",()=>{
+            var r=new Rig();r.Add("a",0,"A","B");r.Add("b",1,"A","B");r.M.Cache["b-A"].samples=960000;r.Start();
+            Check(r.E.All(e=>e.EnsembleSource.Starts==0),"rejected before start");r.Step(2);
+            Check(r.E.All(e=>e.EnsembleSource.Starts==1),"compatible B selected");
+        });
+        Test("loading barrier and load completion during pause",()=>{
+            var r=new Rig();r.Add("a",0,"A");r.Add("b",1,"A");r.M.Cache.Remove("b-A");r.Start();
+            Check(r.E.All(e=>e.EnsembleSource.Starts==0),"wait for all parts");
+            var req=UnityEngine.Networking.UnityWebRequest.Last;req.Result=new UnityEngine.AudioClip();req.isDone=true;r.Step(1,true);
+            Check(r.E.All(e=>e.EnsembleSource.Starts==0),"cannot start paused");r.Step(2);Check(r.E.All(e=>e.EnsembleSource.Starts==1),"starts on resume");
+        });
+        Test("reset cancels pending request and obsolete members",()=>{
+            var r=new Rig();r.Add("a",0,"A");r.M.Cache.Clear();r.Start();var req=UnityEngine.Networking.UnityWebRequest.Last;r.C.Reset("test");
+            Check(req.Aborted && req.Disposed,"request disposed");r.E.Clear();req.isDone=true;req.Result=new UnityEngine.AudioClip();r.Step(2);
+            Check(r.M.Cache.Count==0,"old load cannot populate session");
+        });
+        Test("load error is bounded and group blocked",()=>{
+            var r=new Rig();r.Add("a",0,"A");r.M.Cache.Clear();r.Start();var req=UnityEngine.Networking.UnityWebRequest.Last;
+            req.isDone=true;req.isNetworkError=true;req.error="bad WAV";r.Step(1);r.Step(3);r.Step(4);
+            Check(SpriteSoundLog.Lines.Count(s=>s.Contains("event=rejected"))==1,"one rejection");Check(SpriteSoundLog.Lines.Count(s=>s.Contains("event=blocked"))==1,"one blocked");
+        });
+        Test("identity change does not stop replacement owner",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A");r.Start();int stopped=a.EnsembleSource.Stops;
+            a.Key="animal";a.EnsembleMember=false;r.Step(1);
+            Check(a.EnsembleSource.Stops==stopped,"emitter lifecycle owns identity stop, not stale conductor");
+        });
+        Test("small existing WAV padding difference is accepted",()=>{
+            var r=new Rig();r.Add("a",0,"A");r.Add("b",1,"A");r.M.Cache["b-A"].samples+=2880;r.Start();
+            Check(r.E.All(e=>e.EnsembleSource.Starts==1),"60 ms padding should be tolerated");
+        });
+        Test("new member removes unavailable song from whole band",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A","B");r.Start();var b=r.Add("b",1,"B");r.Step(1.4);r.Step(2.2);
+            Check(a.EnsembleSource.clip==r.M.Cache["a-B"] && b.EnsembleSource.clip==r.M.Cache["b-B"],"regroup shares B");
+        });
+        Test("unexpected stop rejoins clock without restarting peers",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A");var b=r.Add("b",1,"A");r.Start();a.EnsembleSource.Active=false;r.Step(3);
+            Near(a.EnsembleSource.Seek/48000.0,2.2,"recovery cursor");Check(b.EnsembleSource.Starts==1,"peer continuous");
+        });
+        Test("timeout disposes load and bounds retries",()=>{
+            var r=new Rig();r.Add("a",0,"A");r.M.Cache.Clear();r.Start();var req=UnityEngine.Networking.UnityWebRequest.Last;r.Step(17);r.Step(19);
+            Check(req.Aborted && req.Disposed,"timeout cleanup");Check(SpriteSoundLog.Lines.Any(s=>s.Contains("event=blocked")),"no infinite retry");
+        });
+        Test("world reset cancels already scheduled starts",()=>{
+            var r=new Rig();var a=r.Add("a",0,"A");r.Start();r.C.Reset("transition");Check(!a.EnsembleSource.Active,"pending audio canceled");
+        });
+        Test("logging disabled leaves ensemble playback unchanged",()=>{
+            var r=new Rig();SpriteSoundLog.Enabled=false;var a=r.Add("a",0,"A");var b=r.Add("b",1,"A");r.Start();r.Step(3,true);r.Step(5);
+            Check(a.EnsembleSource.Starts==2 && b.EnsembleSource.Starts==2,"playback resumes without logging");
+            Near(a.EnsembleSource.StartTime,b.EnsembleSource.StartTime,"same clock without logging");
+            Check(SpriteSoundLog.Lines.Count==0,"no diagnostic messages");SpriteSoundLog.Enabled=true;
+        });
+        Console.WriteLine(count+" conductor tests passed.");
+    }
+}
+

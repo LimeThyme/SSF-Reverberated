@@ -1,0 +1,11 @@
+{
+  "SpriteSound_DFUIntegration.cs": "381fddfd6529caeee9a69e459c817f4bd28543055ec373f213de50d6e3862a20",
+  "SpriteSound_NPCFRPatch.cs": "344f6d6da62d9478d6a59711d8864ee416fb3d5e910482acb87e3b214728458d",
+  "SpriteSoundConfig.cs": "ca94edefc621224b6cc163b0fcb28a9c97a132617a259b66afa4ce5c7f34bf85",
+  "SpriteSoundEmitter.cs": "dac9b123d07754f7c1da910a0933ff9e8daecb6fb2b0e1c7a2ecacd6020ff1a2",
+  "SpriteSoundEnsembles.cs": "8a9dcff97e40eefa6c05d33e4b5b8945024158e2625d618fdb112541da126581",
+  "SpriteSoundIdentity.cs": "d8e6d0a4feb45c370153cd4ea514d3e5159d23f71b40bf227d154ba9a0032ecd",
+  "SpriteSoundKeyResolver.cs": "6c3856588458ef09cd513d8d8152f23a1710e71c4c45b3b539358916dbcf2237",
+  "SpriteSoundLog.cs": "e46aa41c2f899943cbbdd67f421150c5d17462c6d5956e38cb222c7f92f6cc87",
+  "SpriteSoundManager.cs": "44a5d4f7a5f52be1b9b735975b5d5e1e6068c04c0c189a73e22f82b621f27bba"
+}

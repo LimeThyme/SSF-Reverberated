@@ -1,0 +1,18 @@
+ManifestFileVersion: 0
+CRC: 1864754469
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 6d04376d1b9b55c490079136201accdc
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 5ad585dd02dfb5016c0dad519eab8f49
+HashAppended: 0
+ClassTypes:
+- Class: 49
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundFramework.dfmod.json
+- Assets/Untracked/ModBuilder/Sprite Sound Framework - Reverberated.dll.bytes
+Dependencies: []
