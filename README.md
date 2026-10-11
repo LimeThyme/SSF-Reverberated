@@ -144,8 +144,8 @@ The musician implementation remains the latest tested experiment. The prior
 four-member test was successful.
 
 However, should you not want to build the mod yourself, a prebuilt copy for WIN/OSX/LINUX64
-has been provided for you under `Builds/StandaloneLinux64`, `Builds/StandaloneOSX`, and
-`Builds/StandaloneWindows`.
+has been provided for you under [Builds/StandaloneLinux64](Builds/StandaloneLinux64),
+[Builds/StandaloneOSX](Builds/StandaloneOSX), and [Builds/StandaloneWindows](Builds/StandaloneWindows).
 
 ## Validation
 
@@ -167,7 +167,7 @@ to rerun conductor tests. Test source uses `.cs.txt` to keep stand-ins out of Un
 
 Re-enabling now prints `logging resumed (same session)` instead of another session
 opening header. All nine source files have been reviewed and annotated for the
-unified behavior. See `SpriteSoundFramework-main/SOURCE-CHANGES.md` for provenance,
+unified behavior. See [SOURCE-CHANGES.md](SOURCE-CHANGES.md) for provenance,
 per-file changes, expected behavior and debugging limits. The comparison has now been rerun against the seven original files supplied from the source folder. The guide identifies that exact reference.
 
 The settings menu and file toggle have now been exercised in the supplied gameplay
@@ -177,7 +177,7 @@ to the previous unified build. No new playback feature or fix is claimed.
 
 ## Original-source comparison update
 
-The source comments and SOURCE-CHANGES.md now use your supplied original SSF files.
+The source comments and [SOURCE-CHANGES.md](SOURCE-CHANGES.md) now use your supplied original SSF files.
 Identity/key resolution are unchanged; Harmony behavior is unchanged apart from
 log routing. Generation/range ownership safeguards and local ensemble coordination
 are verified deviations. This update changes documentation only.
@@ -185,7 +185,7 @@ are verified deviations. This update changes documentation only.
 
 ## Early source history
 
-CHANGELOG-1.1-to-1.3.8.txt reconstructs the original ZIP and twelve backup snapshots.
+[CHANGELOG-1.1-to-1.3.8.txt](CHANGELOG-1.1-to-1.3.8.txt) reconstructs the original ZIP and twelve backup snapshots.
 Intermediate entries use backup labels because exact release numbers are unavailable.
-EARLY-HISTORY-EVIDENCE.json records hashes and comparisons with the current source.
-The full CHANGELOG.txt includes both this early history and the later releases.
+[EARLY-HISTORY-EVIDENCE.json](EARLY-HISTORY-EVIDENCE.json) records hashes and comparisons with the current source.
+The full [CHANGELOG.txt](CHANGELOG.txt) includes both this early history and the later releases.
