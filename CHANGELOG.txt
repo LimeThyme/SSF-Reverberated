@@ -65,13 +65,13 @@ Changes since 1.3.9-DEBUG:
 - Added an "Enable Mod Logging" checkbox under Options in DFU's Mod Options.
   It defaults to off, and DFU saves the preference.
 - Added the tooltip: "Creates separate log file directory in the Mods Folder
-  under 'SSF/Logs'. Used for diagnosing issues with the mod."
+  under 'Logs/SSF'. Used for diagnosing issues with the mod."
 - Applying the setting turns diagnostics on or off during play without restarting
   the emitter or the musician group's playback.
 - When disabled, skips periodic diagnostic sampling and closes the dedicated
   writer. Existing log files remain untouched. Operational warnings and errors
   can still appear in Unity's normal log.
-- When enabled, writes to SSF/Logs beside the loaded mod. The first activation
+- When enabled, writes to Logs/SSF beside the loaded mod. The first activation
   during a game session rotates SSF.log to SSF-prev.log. Later activations append
   to SSF.log, preserving earlier information from the same session.
 - A session with logging disabled throughout does not rotate old logs. If enabled
@@ -135,7 +135,7 @@ Debug edition:
 - Added a dedicated SSF logger for the mod's messages, instead of requiring users
   to find all diagnostics among unrelated Unity messages.
 - During this development stage, replaced the initial application-data log
-  location and timestamped files with SSF/Logs beside the loaded mod.
+  location and timestamped files with Logs/SSF beside the loaded mod.
 - Limited normal retention to SSF.log for the current logging session and
   SSF-prev.log for the preceding one. Left older timestamped files untouched.
 - Added immediate writes, orderly shutdown, protection against competing writers,
