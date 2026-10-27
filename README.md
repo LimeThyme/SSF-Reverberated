@@ -25,6 +25,7 @@ startup and compatibility hooks; sound configuration and recordings are unchange
   1.4.2. It still describes the older 1.4.1 setup, not this build.
 
 Provider: https://www.nexusmods.com/daggerfallunity/mods/1192
+
 Upstream instructions: https://github.com/VNGNCTeam/Daggerfall.Harmony
 
 ## Enable Mod Logging
@@ -49,8 +50,6 @@ closes the file. Re-enabling in the same session appends without another rotatio
 An entirely disabled session leaves both existing logs unchanged. If enabled
 logging cannot open its directory, it warns once and falls back to Unity's log;
 disabling the checkbox also stops those fallback diagnostic messages.
-
-
 
 ## Configuration and code both matter
 
@@ -193,5 +192,5 @@ staging manifest is the intended packaging route for this build.
 - `HARMONY-MIGRATION-EVIDENCE.json`: upstream commit and reference hashes.
 - `VALIDATION.txt`: what actually passed and what still needs game/platform testing.
 
-See CHANGELOG.txt for 1.1 through this build. Historical notes describe the
+See [CHANGELOG.txt](CHANGELOG.txt) for 1.1 through this build. Historical notes describe the
 versions named in their headings and do not override current installation steps.
