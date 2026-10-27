@@ -177,6 +177,10 @@ modifying DFU's ModAssemblyBuilder or copying Harmony into the mod. The normal
 source manifest is retained for review and custom build pipelines; the generated
 staging manifest is the intended packaging route for this build.
 
+However, should you not want to build the mod yourself, a prebuilt copy for WIN/OSX/LINUX64
+has been provided for you under [Builds/StandaloneLinux64](Builds/StandaloneLinux64),
+[Builds/StandaloneOSX](Builds/StandaloneOSX), and [Builds/StandaloneWindows](Builds/StandaloneWindows).
+
 ## Developer validation and evidence
 
 - `DeveloperTests/Run-HarmonyTests.ps1`: real Harmony 2.4.2 patching under Unity Mono,
