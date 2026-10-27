@@ -98,7 +98,7 @@ each sprite's existing JSON; preserve its volume, distance and other settings:
   labels, such as `stage-a` and `stage-b`, keep nearby ensembles separate.
 
 - Every pair in a group must be within the smaller configured radius. The default
-  is 12 world units; the accepted range is 0.5â€“100. Groups must share a Unity scene.
+  is 12 world units; the accepted range is 0.5f-100f. Groups must share a Unity scene.
 
 - Distance grouping does not recognize rooms or walls. Use smaller radii or
   different labels where necessary. Labels belong to sprite-key JSONs: two placed
