@@ -1,124 +1,115 @@
-// RETAINED COMPATIBILITY CODE: this Harmony/material-identity approach was
-// already present in the supplied original source. This patch routes its messages through
-// the optional logger; it does not redesign the reflection targets. A future mod
-// or Harmony update may change those signatures. Treat each missing target as a
-// compatibility question before changing the sound playback logic.
-// Provenance: compared with the user-supplied original files; see SOURCE-CHANGES.md.
-
-// Runtime Harmony integration for NPC Flat Replacer and vanilla billboard identity.
-// Reflection avoids a direct compiled dependency on Harmony or NPC Flat Replacer.
-// Compatibility depends on the target types and method signatures being available.
-
+// 1.4.2: replace the loose-DLL loader and reflective Harmony calls with the
+// library supplied by daggerfall.harmony. Billboard identity postfixes below
+// retain 1.4.1 behavior; changing who loads Harmony must not change sound keys.
 using UnityEngine;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Collections.Generic;
+using System.Linq;
 using System;
-using System.IO;
 using DaggerfallWorkshop;
+using DaggerfallWorkshop.Game.Utility.ModSupport;
+using HarmonyLib;
 
 namespace SpriteSoundFramework
 {
     public static class SpriteSound_NPCFRPatch
     {
-        // This retained dependency path is relative to StreamingAssets. It is separate
-        // from Mod.DirPath, which is used for the optional SSF log directory. Moving logs
-        // to the loaded mod's directory did not change where this code searches for Harmony.
-        private const string HarmonyAssemblyPath = "Mods/0Harmony.dll";
         private const string HarmonyPatchId = "com.spritesound.npcfr_fix";
-        private static object harmonyInstance;
-        private static Type harmonyType;
-        // Load Harmony from Mods/0Harmony.dll and patch available material setters.
-        // NPC replacement materials carry useful names that can be lost later. The postfix
-        // saves that name on the billboard. The vanilla postfix removes the custom identity
-        // when a sprite returns to vanilla material assignment. Failures are reported.
-        public static void Init()
+        private static Harmony harmonyInstance;
+        private static readonly List<MethodInfo> installedTargets = new List<MethodInfo>();
+
+        // NoInlining keeps Harmony binding out of the dependency-free bootstrap's
+        // early checks. No file lookup, Assembly.LoadFrom, or loose-DLL fallback is
+        // allowed here: that would silently restore the old conflicting setup.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static bool Init(Mod dependency)
         {
+            if (harmonyInstance != null) return VerifyInstalled();
             try
             {
-                string fullPath = Path.Combine(Application.streamingAssetsPath, HarmonyAssemblyPath);
-                if (!File.Exists(fullPath))
+                Assembly library = typeof(Harmony).Assembly;
+                Type providerRef = dependency.GetCompiledType("Daggerfall.Harmony.HarmonyRef");
+                var libraries = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(a => a.GetName().Name == "0Harmony").ToArray();
+                if (providerRef == null || providerRef.BaseType != typeof(Harmony) ||
+                    libraries.Length != 1 || libraries[0] != library ||
+                    library.GetName().Version != new Version(2, 4, 2, 0))
                 {
-                    SpriteSoundLog.Error($"[SpriteSound] Could not find Harmony DLL at {fullPath}");
-                    return;
+                    SpriteSoundLog.Error("[SpriteSound][Harmony] Unsupported or conflicting library. " +
+                        "Expected one 0Harmony 2.4.2.0 shared with Daggerfall.Harmony; found " +
+                        string.Join("; ", libraries.Select(a => a.FullName).ToArray()));
+                    return false;
                 }
+                SpriteSoundLog.Info("[SpriteSound][Harmony] library=" + library.FullName);
+                harmonyInstance = new Harmony(HarmonyPatchId);
 
-                Assembly harmonyAssembly = Assembly.LoadFrom(fullPath);
-                harmonyType = harmonyAssembly.GetType("HarmonyLib.Harmony");
-                if (harmonyType == null)
+                // Vanilla cleanup is essential: it prevents a pooled billboard
+                // retaining a replacement sprite's key after becoming vanilla.
+                MethodInfo vanilla = typeof(DaggerfallBillboard).GetMethod("SetMaterial",
+                    new Type[] { typeof(int), typeof(int), typeof(int) });
+                if (vanilla == null)
+                    throw new MissingMethodException("DaggerfallBillboard.SetMaterial(int,int,int)");
+                PatchTarget(vanilla, nameof(Postfix_SetMaterial_Vanilla));
+
+                // NPCFR remains optional. Absence is expected in a vanilla setup;
+                // an installed but incompatible signature is a separate warning.
+                Type replacement = FindType("FlatReplacer.ReplacementBillboard");
+                if (replacement == null)
+                    SpriteSoundLog.Info("[SpriteSound][Harmony] NPCFR=absent (optional)");
+                else
                 {
-                    SpriteSoundLog.Error("[SpriteSound] Harmony type not found.");
-                    return;
+                    MethodInfo target = replacement.GetMethod("SetMaterial", new Type[] {
+                        typeof(string), typeof(Vector2), typeof(Texture2D[]),
+                        typeof(int), typeof(int), typeof(bool) });
+                    if (target == null)
+                        SpriteSoundLog.Warning("[SpriteSound][Harmony] NPCFR=unsupported-signature; replacement identity hook unavailable.");
+                    else
+                        PatchTarget(target, nameof(Postfix_SetMaterial_NPCFR));
                 }
-
-                ConstructorInfo ctor = harmonyType.GetConstructor(new[]{typeof(string)});
-                harmonyInstance = ctor.Invoke(new object[]{HarmonyPatchId});
-                MethodInfo patchMethod = GetHarmonyPatchMethod();
-                if (patchMethod == null)
-                {
-                    SpriteSoundLog.Error("[SpriteSound] Patch method not found.");
-                    return;
-                }
-
-                Type bbType = FindType("FlatReplacer.ReplacementBillboard");
-                if (bbType != null)
-                {
-                    MethodInfo targetMethod = bbType.GetMethod("SetMaterial", new Type[]{typeof(string), typeof(Vector2), typeof(Texture2D[]), typeof(int), typeof(int), typeof(bool)});
-                    MethodInfo postfix = typeof(SpriteSound_NPCFRPatch).GetMethod(nameof(Postfix_SetMaterial_NPCFR), BindingFlags.Static | BindingFlags.Public);
-                    if (targetMethod != null && postfix != null)
-                    {
-                        PatchTarget(patchMethod, harmonyAssembly, targetMethod, postfix);
-                    }
-                }
-
-                MethodInfo vanillaMethod = typeof(DaggerfallBillboard).GetMethod("SetMaterial", new Type[]{typeof(int), typeof(int), typeof(int)});
-                MethodInfo vanillaPostfix = typeof(SpriteSound_NPCFRPatch).GetMethod(nameof(Postfix_SetMaterial_Vanilla), BindingFlags.Static | BindingFlags.Public);
-                if (vanillaMethod != null && vanillaPostfix != null)
-                {
-                    PatchTarget(patchMethod, harmonyAssembly, vanillaMethod, vanillaPostfix);
-                }
-
-                // This historical notice is not proof that every optional target was
-                // found: missing types/signatures above are skipped without a count.
-                SpriteSoundLog.Info("[SpriteSound] Patches applied manually (NPCFR + Vanilla cleanup).");
+                return VerifyInstalled();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                SpriteSoundLog.Error($"[SpriteSound] Error applying patches: {e}");
+                SpriteSoundLog.Error("[SpriteSound][Harmony] Installation failed: " + ex);
+                Shutdown();
+                return false;
             }
         }
 
-        // Locate an instance Patch method through reflection.
-        // The existing discovery rule uses method name and the first parameter type.
-        // It is a compatibility heuristic, not proof of support for all Harmony versions.
-        static MethodInfo GetHarmonyPatchMethod()
+        private static void PatchTarget(MethodInfo target, string postfixName)
         {
-            var patchMethods = harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            foreach (var method in patchMethods)
-            {
-                if (method.Name != "Patch")
-                    continue;
-                var parameters = method.GetParameters();
-                if (parameters.Length >= 3 && parameters[0].ParameterType == typeof(MethodBase))
-                {
-                    return method;
-                }
-            }
-
-            return null;
+            MethodInfo postfix = typeof(SpriteSound_NPCFRPatch).GetMethod(postfixName);
+            harmonyInstance.Patch(target, postfix: new HarmonyMethod(postfix));
+            installedTargets.Add(target);
+            SpriteSoundLog.Info("[SpriteSound][Harmony] patched=" + target.DeclaringType.FullName + "." + target.Name);
         }
 
-        // Build a HarmonyMethod and invoke the supported patch argument shape.
-        // The existing implementation branches between five arguments and four arguments.
-        // Keep this behavior unchanged unless testing a different Harmony API explicitly.
-        static void PatchTarget(MethodInfo patchMethod, Assembly harmonyAss, MethodInfo original, MethodInfo postfix)
+        // Check ownership AND the expected postfix, not merely whether someone
+        // patched this method. Called once after installation and again one frame
+        // later. This is not a promise that another mod cannot remove it afterward.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static bool VerifyInstalled()
         {
-            Type harmonyMethodType = harmonyAss.GetType("HarmonyLib.HarmonyMethod");
-            ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[]{typeof(MethodInfo)});
-            object postfixObj = harmonyMethodCtor.Invoke(new object[]{postfix});
-            int paramCount = patchMethod.GetParameters().Length;
-            if (paramCount == 5)
-                patchMethod.Invoke(harmonyInstance, new object[]{original, null, postfixObj, null, null});
-            else
-                patchMethod.Invoke(harmonyInstance, new object[]{original, null, postfixObj, null});
+            if (harmonyInstance == null || installedTargets.Count == 0) return false;
+            foreach (MethodInfo target in installedTargets)
+            {
+                var info = Harmony.GetPatchInfo(target);
+                if (info == null || !info.Postfixes.Any(p => p.owner == HarmonyPatchId &&
+                    p.PatchMethod.DeclaringType == typeof(SpriteSound_NPCFRPatch)))
+                    return false;
+            }
+            return true;
+        }
+
+        // Never call a global UnpatchAll. Rollback/shutdown removes only our owner
+        // ID, leaving every other mod's hooks intact. Also supports fresh Editor runs.
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static void Shutdown()
+        {
+            if (harmonyInstance != null) harmonyInstance.UnpatchAll(HarmonyPatchId);
+            installedTargets.Clear();
+            harmonyInstance = null;
         }
 
         // Search loaded assemblies for a named runtime type.
@@ -166,3 +157,4 @@ namespace SpriteSoundFramework
         }
     }
 }
+

@@ -1,0 +1,23 @@
+{
+  "review_date": "2026-10-20",
+  "provider_repository": "https://github.com/VNGNCTeam/Daggerfall.Harmony",
+  "reviewed_commit": "b140e6c22e4232162fe1c5a6b3e30819c79714f2",
+  "reference_package": "https://api.nuget.org/v3-flatcontainer/lib.harmony/2.4.2/lib.harmony.2.4.2.nupkg",
+  "compile_reference": "lib/net472/0Harmony.dll",
+  "runtime_library_version": "2.4.2.0",
+  "minimum_provider_mod_version": "2.4.2.2",
+  "baseline_zip_sha256": "8f49b8600afbcc42ef20d1ecbb9662d1ec2a0a24262c301434bd775a230eae3e",
+  "inputs_sha256": {
+    "SubModule.cs": "b8422e115d29cd2387e2cdaa73661ae7baa52d0336697457426179b29c69b17a",
+    "HarmonyRef.cs": "5d86a4df62b26c8e96d52a01e2d7dd81ce7b6dc3e310ea9873b37ab311bc3ba3",
+    "Daggerfall.Harmony.csproj": "529534b0a4f41e2b6f3860c4b0b78be393b5b42c5f9999dfc867fa2847dce3cc",
+    "lib.harmony.2.4.2.nupkg": "d64592e53090464559fce48612c9ca7c8dc73113841376b7aa3455f46fc5d579",
+    "0Harmony.dll": "7b9e756306fa3d7620e02a857c8927a6ab04973f9bd8a77d3866700a6deac55c"
+  },
+  "notes": [
+    "Reference DLL is not included in the release source ZIP.",
+    "Provider main source was downloaded for inspection, not modified or redistributed.",
+    "Unity/DFU stand-ins are used by migration tests, with real Harmony patching under Unity Mono.",
+    "Actual game, Mod Builder asset bundles and Win/macOS/Linux playback remain untested for this candidate."
+  ]
+}

@@ -1,24 +1,26 @@
-Original-source documentation review (2026-10-10):
-Reference: seven user-supplied originals; exact hashes in SOURCE-CHANGES.md.
-Full current source compilation against installed Unity/DFU assemblies: PASS.
-Roslyn executable-token comparison against pre-review source: all 9 files unchanged, no exceptions.
-Original method comparison: included as ORIGINAL-METHOD-COMPARISON.txt.
-This review changes comments and documentation only. No new gameplay test needed or performed.
+SSF REVERBERATED 1.4.2 CANDIDATE - 2026-10-20
 
-Previously completed validation (not rerun in this documentation-only review):
-Logging toggle checks: 13 passed, including distinct first-open/resume headers.
-Logger filesystem regression checks: 10 passed.
-DFU settings deserialization: passed.
-Conductor tests: 19 passed.
-Supplied gameplay log confirmed live logging off/on and same-file append.
-The previously observed Tavern timing offset remains unproven as fixed.
+PASS full 10-file source compilation with installed Unity 2019.4.41f2/DFU assemblies
+     and Lib.Harmony 2.4.2 net472 (assembly version 2.4.2.0).
+PASS included Build-Candidate.ps1 compiled and generated SSF-only staging assets.
+PASS 16 migration checks without NPCFR + 16 with compatible NPCFR stand-in.
+     These execute real Harmony patches under Unity Mono; Unity/DFU are stand-ins.
+PASS 19 existing conductor tests (simulated audio device).
+PASS 2 schema checks using actual DFU serializer/types: manifest and logging toggle.
+PASS seven unchanged source files compared byte-for-byte with packaged 1.4.1.
+PASS provider source hashes matched the pinned upstream commit in evidence JSON.
 
-This is a source package, not a newly built dfmod. Installed game/project files were not changed.
+ValidationRecords contains text output; runtime test executables/reference DLLs
+and BuildOutput are excluded from the source ZIP. Source hashes cover all ten files.
+Run validate_package.py with the original packaged 1.4.1 ZIP for a read-only audit.
 
-Version-history update: ModVersion corrected to 1.4.1; CHANGELOG.txt added.
-Manifest JSON and asset references verified; all nine C# hashes unchanged.
-Source ZIP rebuilt and integrity checked. No new compilation/gameplay run for this metadata-only update.
+NOT PERFORMED:
+- No Unity Play Mode or installed-game run for this candidate.
+- No Mod Builder .dfmod platform bundles produced or tested.
+- No Windows/macOS/Linux speaker/audio timing certification.
+- No verification that the known Tavern timing observation is fixed.
 
-Early-history documentation update: original 1.1 ZIP, 12 backup files and 7 endpoint files compared.
-Endpoint byte matches both preserved 1.3.8 baselines. Historical snapshots parsed; not compiled or gameplay-tested.
-All 9 current source hashes and manifest version 1.4.1 remain unchanged.
+The frame barrier follows the reviewed synchronous provider Start implementation.
+The unit tests exercise that ordering contract, not Unity's actual scheduler.
+Follow the manual test matrix in HARMONY-MIGRATION.md before releasing as tested.
+Installed game/project files, loose Harmony DLLs and the 1.4.1 ZIP were untouched.

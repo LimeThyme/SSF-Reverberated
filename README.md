@@ -1,23 +1,36 @@
-# Sprite Sound Framework — Reverberated
+# Sprite Sound Framework - Reverberated 1.4.2 candidate
 
-Version **1.4.1**. See [CHANGELOG.txt](CHANGELOG.txt) for the version history from 1.1 through 1.4.1.
-One build now supplies the latest musician synchronization and optional logging.
-The older debug/release packages are retained only as rollback snapshots.
+This candidate replaces SSF's loose Harmony DLL loader with a required dependency
+on **daggerfall.harmony.dfmod**. It is based on the final packaged 1.4.1, including
+the maintainer's Reverberated manifest. The 1.4.1 archive is preserved separately.
 
-**AI Disclaimer: This mod and patch were written with Generative AI. For the patch itself, I used ChatGPT
-then switched to Codex.**
+**Status:** source compiled; 32 migration checks and 19 conductor checks passed.
+This is not a gameplay-tested release or a set of prebuilt platform .dfmod files.
+The known Tavern timing observation remains unresolved. This change concerns
+startup and compatibility hooks; sound configuration and recordings are unchanged.
 
-**If that is a deal breaker, I completely understand and don't necessarily disagree
-with your position. I started on this rabbit hole just because I wanted to fix a mod that was breaking my
-game when exiting interiors and I am unfamiliar with C#.**
+## Requirements and installation for players
 
-**It is my hope that one day, after dusting off my App Dev Degree and taking on the task of learning C#, I may return to this mod and hand rewrite it.
-As it stands now, I want to at least have an open source patch with as much documentation as possible out
-there for more talented individuals to come after and make the most out of this code and patch.**
+- DFU 1.1.1 is the development target.
+- Install and enable Daggerfall.Harmony **2.4.2.2**, providing Harmony **2.4.2.0**,
+  above Reverberated. Later provider builds pass the minimum-version check but
+  must still supply the supported library and startup contract. Future Harmony
+  library versions need a deliberate compatibility review.
+- Install the built Reverberated .dfmod and the desired SSF sound pack. Only one
+  SSF/Reverberated edition should be enabled.
+- Reverberated no longer supplies or opens a loose 0Harmony.dll. An old loose DLL
+  may cause a version conflict. Back it up outside active loading folders only
+  after checking whether another mod requires it; this patch never deletes it.
+- The old instruction to pair Harmony .dfmod with SSF's loose DLL is obsolete for
+  1.4.2. It still describes the older 1.4.1 setup, not this candidate.
+
+Provider: https://www.nexusmods.com/daggerfallunity/mods/1192
+Upstream instructions: https://github.com/VNGNCTeam/Daggerfall.Harmony
 
 ## Enable Mod Logging
 
 In DFU Mod Options, open Sprite Sound Framework and its **Options** section.
+
 The checkbox is titled **Enable Mod Logging**, defaults to **off**, and has this
 exact tooltip:
 
@@ -33,10 +46,11 @@ and errors still use Unity's normal log, as in the former release edition.
 When on, diagnostics go to the loaded mod's own `SSF/Logs/SSF.log`. The first
 activation in a new game session rotates the old file to `SSF-prev.log`. Disabling
 closes the file. Re-enabling in the same session appends without another rotation.
-
 An entirely disabled session leaves both existing logs unchanged. If enabled
 logging cannot open its directory, it warns once and falls back to Unity's log;
 disabling the checkbox also stops those fallback diagnostic messages.
+
+
 
 ## Configuration and code both matter
 
@@ -60,12 +74,19 @@ Existing musician JSONs work without edits. These optional fields are merged int
 each sprite's existing JSON; preserve its volume, distance and other settings:
 
 ```json
+
 {
+
   "isMusician": true,
+
   "loop": true,
+
   "musicianSyncGroup": "",
+
   "musicianGroupRadius": 12.0
+
 }
+
 ```
 
 - Empty group labels enable automatic grouping of nearby musicians. Different
@@ -80,7 +101,7 @@ each sprite's existing JSON; preserve its volume, distance and other settings:
 
 - `randomize` is ignored for musicians; the conductor chooses their songs. Other
   randomized effects retain their own playback and cannot change musician songs.
-  
+
 - Looping musicians are controlled by the conductor. Frame-triggered one-shots
   are suppressed on musician sources so unrelated sounds cannot intrude on a part.
 
@@ -101,14 +122,13 @@ each sprite's existing JSON; preserve its volume, distance and other settings:
 5. Freezes the group cursor on pause. On resume, all audible parts are scheduled
    together from that cursor. Leaving hearing range stops only that local source;
    returning joins the group's current song position.
-
+   
 6. Advances the playlist once per group. New/destroyed musicians cause regrouping
    and a fresh coordinated song after the settling delay. Range changes alone do
    not alter membership. World transitions cancel pending requests and starts.
 
 Songs load sequentially per band and come from the existing shared clip cache.
 A failed load or incompatible length excludes that song for the group's lifetime.
-
 Requests time out after 15 seconds. If nothing compatible remains, one `blocked`
 event explains the silence. Restart after editing files; filenames and JSONs are
 cached. There is a small scheduling/loading gap between songs; this is not a
@@ -140,63 +160,43 @@ SpriteSounds directory and optionally `--keys 182_37 182_50` to check a prospect
 group's common filenames and WAV durations without launching the game. With no
 keys it compares all musician configs; runtime grouping is local, not library-wide.
 
-## Build and install
+## Build this source package
 
-This is a source package; it still requires DFU Mod Builder to make a `.dfmod`.
+Use `DeveloperTests/Build-Candidate.ps1` with `-UnityEditorDirectory`,
+`-DfuProjectDirectory`, and `-HarmonyAssembly`. Supply Lib.Harmony 2.4.2's **net472**
+0Harmony.dll as the compile reference, stored outside the release package.
+The script uses the project's existing Library/ScriptAssemblies and Unity 2019.4
+compiler. It creates `BuildOutput/SSF-Reverberated-142` locally.
 
-Replace the project's SSF source folder with the enclosed `SpriteSoundFramework-main`
-folder, then build its manifest. The manifest includes **modsettings.json**; that
-asset must be bundled for the checkbox to appear. Keep only one SSF binary enabled.
+Copy that generated folder to `Assets/Untracked/ModBuilder/SSF-Reverberated-142`
+in the DFU project, open its generated manifest in Mod Builder, and build the
+required platform asset bundles. The staging manifest includes SSF's precompiled
+`.dll.bytes` and modsettings.json, not the C# files or Harmony DLL. No game or
+project folder is changed by the script itself.
 
-The GUID is unchanged so this replaces the existing mod rather than adding another.
-No installed project or game files were modified while preparing this package.
+Keep the old SSF source folder out of Assets when testing the new staged assembly;
+duplicate classes from old source can obscure which implementation is running.
+Do not install a .dll.bytes file directly as a mod. It must be bundled by Mod Builder.
 
-The musician implementation remains the latest tested experiment. The prior
-four-member test was successful.
+This separate compilation step supplies the explicit Harmony reference without
+modifying DFU's ModAssemblyBuilder or copying Harmony into the mod. The normal
+source manifest is retained for review and custom build pipelines; the generated
+staging manifest is the intended packaging route for this candidate.
 
-However, should you not want to build the mod yourself, a prebuilt copy for WIN/OSX/LINUX64
-has been provided for you under [Builds/StandaloneLinux64](Builds/StandaloneLinux64),
-[Builds/StandaloneOSX](Builds/StandaloneOSX), and [Builds/StandaloneWindows](Builds/StandaloneWindows).
+## Developer validation and evidence
 
-## Validation
+- `DeveloperTests/Run-HarmonyTests.ps1`: real Harmony 2.4.2 patching under Unity Mono,
+  with DFU/Unity stand-ins, in vanilla and NPCFR-present configurations.
+- `DeveloperTests/Run-Tests.ps1`: the existing 19 simulated conductor checks.
+- `DeveloperTests/Run-SchemaTests.ps1`: manifest dependency and logging settings
+  checked with DFU's actual serializer and types.
+- `validate_package.py`: hashes, dependency declaration, excluded DLLs, source assets,
+  and comparison of unchanged playback files with the supplied 1.4.1 ZIP.
+- `audit_musicians.py`: existing read-only WAV/config audit; it does not test Harmony.
+- `HARMONY-MIGRATION.md`: rationale, file changes, expected logs, limits and manual
+  game checks. Read this before changing the bootstrap ordering.
+- `HARMONY-MIGRATION-EVIDENCE.json`: upstream commit and reference hashes.
+- `VALIDATION.txt`: what actually passed and what still needs game/platform testing.
 
-- Full source compiled against installed Unity 2019.4.41f2 and DFU assemblies.
-- The actual DFU settings deserializer verified ToggleKey, false default, section,
-  label, and exact tooltip.
-- 10 filesystem regression checks and 12 toggle checks passed.
-- 19 conductor tests passed, including playback with logging disabled.
-
-The supplied gameplay log confirms the settings callback disables logging and
-re-enables it by appending. It cannot establish uninterrupted audio during the
-disabled interval. The header wording correction has automated regression coverage.
-
-The read-only `audit_musicians.py` and simulated conductor tests remain included.
-Run `DeveloperTests/Run-Tests.ps1 -UnityEditorDirectory <Unity Editor directory>`
-to rerun conductor tests. Test source uses `.cs.txt` to keep stand-ins out of Unity.
-
-## Comment review and log header correction
-
-Re-enabling now prints `logging resumed (same session)` instead of another session
-opening header. All nine source files have been reviewed and annotated for the
-unified behavior. See [SOURCE-CHANGES.md](SOURCE-CHANGES.md) for provenance,
-per-file changes, expected behavior and debugging limits. The comparison has now been rerun against the seven original files supplied from the source folder. The guide identifies that exact reference.
-
-The settings menu and file toggle have now been exercised in the supplied gameplay
-log. This documentation/header revision compiled and passed 13 toggle checks and
-10 logger regression checks. The rest of the executable source is token-identical
-to the previous unified build. No new playback feature or fix is claimed.
-
-## Original-source comparison update
-
-The source comments and [SOURCE-CHANGES.md](SOURCE-CHANGES.md) now use the supplied original SSF files.
-Identity/key resolution are unchanged; Harmony behavior is unchanged apart from
-log routing. Generation/range ownership safeguards and local ensemble coordination
-are verified deviations. This update changes documentation only.
-
-
-## Early source history
-
-[CHANGELOG-1.1-to-1.3.8.txt](CHANGELOG-1.1-to-1.3.8.txt) reconstructs the original ZIP and twelve backup snapshots.
-Intermediate entries use backup labels because exact release numbers are unavailable.
-[EARLY-HISTORY-EVIDENCE.json](EARLY-HISTORY-EVIDENCE.json) records hashes and comparisons with the current source.
-The full [CHANGELOG.txt](CHANGELOG.txt) includes both this early history and the later releases.
+See CHANGELOG.txt for 1.1 through this candidate. Historical notes describe the
+versions named in their headings and do not override current installation steps.

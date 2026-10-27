@@ -1,10 +1,33 @@
 SPRITE SOUND FRAMEWORK - PATCH
-VERSION HISTORY: 1.1 THROUGH 1.4.1
+VERSION HISTORY: 1.1 THROUGH 1.4.2 CANDIDATE
 
 The version labels below follow the development sequence supplied by the mod
 maintainer. Some historical manifests still contain 1.3.8 because version bumps
 were missed. Those preserved archives have not been rewritten. The current
-manifest now correctly identifies this source package as 1.4.1.
+manifest was corrected in 1.4.1; this candidate advances it to 1.4.2.
+
+
+1.4.2 CANDIDATE - SHARED HARMONY DEPENDENCY
+Changes since 1.4.1:
+
+- Requires daggerfall.harmony.dfmod ahead of Reverberated. Startup checks for
+  provider version 2.4.2.2 or newer and the supported Harmony library 2.4.2.0.
+- Removed SSF's explicit StreamingAssets/Mods/0Harmony.dll load and four/five-
+  argument reflection guesswork. Uses direct Harmony calls against a build reference.
+- Delays hook installation until the active provider has had its Start cleanup
+  opportunity, then checks hook retention on the next frame before discovery.
+- Reports missing/disabled dependencies, wrong order, unsupported versions,
+  conflicting assemblies, and individual hook results. Missing NPCFR is optional;
+  an unexpected NPCFR signature produces a warning. Missing vanilla cleanup fails startup.
+- Removes only SSF-owned patches on failure/shutdown and prevents duplicate startup.
+- Adds a standalone compile/staging script that excludes Harmony from distribution,
+  real-Harmony migration tests, a package validator and a detailed migration guide.
+- Retains the 1.4.1 audio, ensemble and logging implementation. Does not claim to
+  resolve the Tavern timing offset or change sound packs.
+
+Validation: full source compile passed; 32 migration checks using real Harmony
+and stand-in Unity/DFU APIs passed; 19 existing conductor checks passed. No new
+in-game, Mod Builder platform bundle or speaker timing validation is claimed.
 
 1.4.1 - LOG HEADER CLEANUP AND SOURCE DOCUMENTATION
 Changes since 1.4.0:

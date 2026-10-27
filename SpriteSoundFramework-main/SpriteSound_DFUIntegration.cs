@@ -2,6 +2,8 @@
 // replacement-billboard hooks. This version adds mod-local logging initialization,
 // the saved Mod Options callback, and orderly logger shutdown. Transition resets
 // now retire whole musician groups, including their pending loads and starts.
+// 1.4.2 adds a dependency bootstrap: discovery begins only after shared Harmony
+// startup cleanup and a second-frame check of SSF's installed hook ownership.
 // Discovery finds objects; it must not become a second owner of audio playback.
 // Provenance: compared with the user-supplied original files; see SOURCE-CHANGES.md.
 
@@ -23,22 +25,23 @@ namespace SpriteSoundFramework
     public static class SpriteSound_DFUIntegration
     {
         private static Mod mod;
-        // Install compatibility hooks and create the persistent discovery component.
-        // DFU invokes this entry point at startup. Harmony support is initialized before
-        // the scanner begins attaching emitters.
+        // 1.4.2: initialize diagnostics immediately, but let the bootstrap install hooks
+        // after the dependency has completed its Start cleanup. Creating the scanner
+        // here would allow discovery before that ordering check has succeeded.
         [Invoke(StateManager.StateTypes.Start, 0)]
         public static void Init(InitParams initParams)
         {
+            // DFU can invoke entry points again; never start a second bootstrap/logger.
+            if (SpriteSoundHarmonyBootstrap.IsRunning) return;
             mod = initParams.Mod;
+            mod.IsReady = false;
             SpriteSoundLog.BeginSession(mod != null ? mod.DirPath : null);
             // Load saved checkbox state before patches or emitters produce diagnostics.
             mod.LoadSettingsCallback = ApplySettings;
             mod.LoadSettings();
-            SpriteSound_NPCFRPatch.Init();
-            var go = new GameObject("SpriteSoundFramework_Hook");
+            var go = new GameObject("SpriteSoundFramework_Bootstrap");
             UnityEngine.Object.DontDestroyOnLoad(go);
-            go.AddComponent<SpriteSoundHook>();
-            SpriteSoundLog.Info("[SpriteSound] DFU integration init (Hybrid Scan Mode)");
+            go.AddComponent<SpriteSoundHarmonyBootstrap>().Configure(mod);
         }
         // DFU invokes this both for initial settings and when the player applies edits.
         // Read its saved boolean; do not invent a second preference file. The callback
