@@ -46,7 +46,7 @@ In DFU Mod Options, open Sprite Sound Framework and its **Options** section.
 The checkbox is titled **Enable Mod Logging**, defaults to **off**, and has this
 exact tooltip:
 
-> Creates separate log file directory in the Mods Folder under 'SSF/Logs'. Used for diagnosing issues with the mod.
+> Creates separate log file directory in the Mods Folder under 'Logs/SSF'. Used for diagnosing issues with the mod.
 
 Apply the setting through DFU's settings window. The callback applies it during
 play without restarting audio or rebuilding the mod. DFU saves the preference.
@@ -55,7 +55,7 @@ When off, no SSF diagnostic directory is created and periodic voice, animal and
 ensemble samples are skipped. Existing logs remain untouched. Actionable warnings
 and errors still use Unity's normal log, as in the former release edition.
 
-When on, diagnostics go to the loaded mod's own `SSF/Logs/SSF.log`. The first
+When on, diagnostics go to the loaded mod's own `Logs/SSF/SSF.log`. The first
 activation in a new game session rotates the old file to `SSF-prev.log`. Disabling
 closes the file. Re-enabling in the same session appends without another rotation.
 An entirely disabled session leaves both existing logs unchanged. If enabled
@@ -141,7 +141,7 @@ gapless mixer. An inaudible band does not preload its next song.
 
 ## Debugging
 
-The existing logger still writes `<loaded mod directory>/SSF/Logs/SSF.log` and
+The existing logger still writes `<loaded mod directory>/Logs/SSF/SSF.log` and
 rotates the previous session to `SSF-prev.log`. Search for `[Ensemble]`:
 
 | Event | Plain-language meaning |
