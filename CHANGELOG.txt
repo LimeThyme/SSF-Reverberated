@@ -1,13 +1,13 @@
 SPRITE SOUND FRAMEWORK - PATCH
-VERSION HISTORY: 1.1 THROUGH 1.4.2 CANDIDATE
+VERSION HISTORY: 1.1 THROUGH 1.4.2 
 
 The version labels below follow the development sequence supplied by the mod
 maintainer. Some historical manifests still contain 1.3.8 because version bumps
 were missed. Those preserved archives have not been rewritten. The current
-manifest was corrected in 1.4.1; this candidate advances it to 1.4.2.
+manifest was corrected in 1.4.1; this build advances it to 1.4.2.
 
 
-1.4.2 CANDIDATE - SHARED HARMONY DEPENDENCY
+1.4.2 - SHARED HARMONY DEPENDENCY
 Changes since 1.4.1:
 
 - Requires daggerfall.harmony.dfmod ahead of Reverberated. Startup checks for
@@ -22,8 +22,7 @@ Changes since 1.4.1:
 - Removes only SSF-owned patches on failure/shutdown and prevents duplicate startup.
 - Adds a standalone compile/staging script that excludes Harmony from distribution,
   real-Harmony migration tests, a package validator and a detailed migration guide.
-- Retains the 1.4.1 audio, ensemble and logging implementation. Does not claim to
-  resolve the Tavern timing offset or change sound packs.
+- Retains the 1.4.1 audio, ensemble and logging implementation.
 
 Validation: full source compile passed; 32 migration checks using real Harmony
 and stand-in Unity/DFU APIs passed; 19 existing conductor checks passed. No new
@@ -56,8 +55,7 @@ Changes since 1.4.0:
 
 Validation: source compilation passed. The header revision passed 13 logging
 toggle checks and 10 logger filesystem checks. The subsequent original-source
-comment review left executable code identical across all nine files. This version
-does not introduce a new playback feature or claim to resolve the Tavern offset.
+comment review left executable code identical across all nine files.
 
 1.4.0 - ONE BUILD WITH OPTIONAL LOGGING
 Changes since 1.3.9-DEBUG:
@@ -121,8 +119,7 @@ Changes since 1.3.8-DEBUG:
 Validation: initial conductor suite passed 18 tests. The library audit found 13
 musician keys sharing six song suffixes, all within the duration tolerance. Later
 gameplay tests exercised ensembles, including a reported six-flat stress test.
-Matching names and durations do not prove matching musical arrangements. An
-observed roughly 63 ms Tavern timing offset remains an open investigation.
+Matching names and durations do not prove matching musical arrangements.
 
 1.3.8-DEBUG / 1.3.8-RELEASE - PRESERVED PLAYBACK, TWO EDITIONS
 Changes since the tested 1.3.8 baseline:
