@@ -9,6 +9,17 @@ This is not a gameplay-tested release or a set of prebuilt platform .dfmod files
 The known Tavern timing observation remains unresolved. This change concerns
 startup and compatibility hooks; sound configuration and recordings are unchanged.
 
+**AI Disclaimer: This mod and patch were written with Generative AI. For the patch itself, I used ChatGPT
+then switched to Codex.**
+
+**If that is a deal breaker, I completely understand and don't necessarily disagree
+with your position. I started on this rabbit hole just because I wanted to fix a mod that was breaking my
+game when exiting interiors and I am unfamiliar with C#.**
+
+**It is my hope that one day, after dusting off my App Dev Degree and taking on the task of learning C#, I may return to this mod and hand rewrite it.
+As it stands now, I want to at least have an open source patch with as much documentation as possible out
+there for more talented individuals to come after and make the most out of this code and patch.**
+
 ## Requirements and installation for players
 
 - DFU 1.1.1 is the development target.
