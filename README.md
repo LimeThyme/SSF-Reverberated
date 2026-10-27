@@ -1,6 +1,6 @@
-# Sprite Sound Framework - Reverberated 1.4.2 candidate
+# Sprite Sound Framework - Reverberated 1.4.2
 
-This candidate replaces SSF's loose Harmony DLL loader with a required dependency
+This build replaces SSF's loose Harmony DLL loader with a required dependency
 on **daggerfall.harmony.dfmod**. It is based on the final packaged 1.4.1, including
 the maintainer's Reverberated manifest. The 1.4.1 archive is preserved separately.
 
@@ -22,7 +22,7 @@ startup and compatibility hooks; sound configuration and recordings are unchange
   may cause a version conflict. Back it up outside active loading folders only
   after checking whether another mod requires it; this patch never deletes it.
 - The old instruction to pair Harmony .dfmod with SSF's loose DLL is obsolete for
-  1.4.2. It still describes the older 1.4.1 setup, not this candidate.
+  1.4.2. It still describes the older 1.4.1 setup, not this build.
 
 Provider: https://www.nexusmods.com/daggerfallunity/mods/1192
 Upstream instructions: https://github.com/VNGNCTeam/Daggerfall.Harmony
@@ -76,15 +76,10 @@ each sprite's existing JSON; preserve its volume, distance and other settings:
 ```json
 
 {
-
   "isMusician": true,
-
   "loop": true,
-
   "musicianSyncGroup": "",
-
   "musicianGroupRadius": 12.0
-
 }
 
 ```
@@ -162,7 +157,7 @@ keys it compares all musician configs; runtime grouping is local, not library-wi
 
 ## Build this source package
 
-Use `DeveloperTests/Build-Candidate.ps1` with `-UnityEditorDirectory`,
+Use `DeveloperTests/Build-build.ps1` with `-UnityEditorDirectory`,
 `-DfuProjectDirectory`, and `-HarmonyAssembly`. Supply Lib.Harmony 2.4.2's **net472**
 0Harmony.dll as the compile reference, stored outside the release package.
 The script uses the project's existing Library/ScriptAssemblies and Unity 2019.4
@@ -181,7 +176,7 @@ Do not install a .dll.bytes file directly as a mod. It must be bundled by Mod Bu
 This separate compilation step supplies the explicit Harmony reference without
 modifying DFU's ModAssemblyBuilder or copying Harmony into the mod. The normal
 source manifest is retained for review and custom build pipelines; the generated
-staging manifest is the intended packaging route for this candidate.
+staging manifest is the intended packaging route for this build.
 
 ## Developer validation and evidence
 
@@ -198,5 +193,5 @@ staging manifest is the intended packaging route for this candidate.
 - `HARMONY-MIGRATION-EVIDENCE.json`: upstream commit and reference hashes.
 - `VALIDATION.txt`: what actually passed and what still needs game/platform testing.
 
-See CHANGELOG.txt for 1.1 through this candidate. Historical notes describe the
+See CHANGELOG.txt for 1.1 through this build. Historical notes describe the
 versions named in their headings and do not override current installation steps.
