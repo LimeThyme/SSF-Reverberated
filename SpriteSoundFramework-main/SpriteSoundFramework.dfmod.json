@@ -1,20 +1,30 @@
 {
     "ModTitle": "Sprite Sound Framework - Reverberated",
-    "ModVersion": "1.4.1",
+    "ModVersion": "1.4.2",
     "ModAuthor": "Codex, MasterRoshieHehe, Clerical Error",
     "ContactInfo": "https://discord.gg/NCrDfzSMpz",
     "DFUnity_Version": "1.1.1",
-    "ModDescription": "DISCLAIMER: Generative AI was used to create/patch this mod. Adds configurable sounds to sprites, stabilizes animal playback, and improves sound handling during pauses, movement, and scene changes. Nearby musicians play compatible songs together with synchronized timing. Optional diagnostic logging can be enabled in Mod Options, keeping the two most recent logs in the Mods folder under `SSF/Logs`.",
+    "ModDescription": "DISCLAIMER: Generative AI was used to create/patch this mod. Adds configurable sounds to sprites, stabilizes animal playback, respects DFU\u2019s sound-volume setting, and improves sound handling during pauses, movement, and scene changes. Nearby musicians play shared songs together and stay in sync. Now requires Daggerfall.Harmony, with updated documentation to help with future fixes and improvements. Optional logging can be enabled in Mod Options, keeping the two most recent logs under `Mods/SSF/Logs`.",
     "GUID": "3ae1e0cc-55a4-48b6-82e0-b4a97b217094",
     "Files": [
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundEnsembles.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundKeyResolver.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSound_DFUIntegration.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundManager.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundIdentity.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundLog.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSound_NPCFRPatch.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundEmitter.cs",
-        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.1/SpriteSoundFramework-main/SpriteSoundConfig.cs"
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundConfig.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundIdentity.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSound_DFUIntegration.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSound_NPCFRPatch.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundKeyResolver.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundManager.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundEmitter.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundLog.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundEnsembles.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/modsettings.json",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundHarmonyBootstrap.cs",
+        "Assets/Untracked/ModBuilder/SSF-Reverberated-1.4.2/SpriteSoundFramework-main/SpriteSoundFramework.dfmod.json"
+    ],
+    "Dependencies": [
+        {
+            "Name": "daggerfall.harmony",
+            "IsOptional": false,
+            "IsPeer": false
+        }
     ]
 }

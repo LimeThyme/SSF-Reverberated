@@ -1,0 +1,51 @@
+// Uses DFU's real serializer/types without starting Unity. Keep as .cs.txt so
+// this executable's entry point and references never become mod source assets.
+using System;
+using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using DaggerfallWorkshop.Game.Utility.ModSupport;
+using DaggerfallWorkshop.Game.Utility.ModSupport.ModSettings;
+class SchemaTests
+{
+    static string[] directories;
+    static void Main(string[] args)
+    {
+        directories = new[] { Path.Combine(args[1], "Assets/Resources"),
+            Path.Combine(args[1], "Library/ScriptAssemblies"),
+            Path.Combine(args[2], "Data/Managed/UnityEngine") };
+        AppDomain.CurrentDomain.AssemblyResolve += (sender, request) => {
+            foreach (string dir in directories)
+            {
+                string path = Path.Combine(dir, new AssemblyName(request.Name).Name + ".dll");
+                if (File.Exists(path)) return Assembly.LoadFrom(path);
+            }
+            return null;
+        };
+        Run(args[0]);
+    }
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    static void Run(string root)
+    {
+        var serializer = new FullSerializer.fsSerializer();
+        ModInfo info = null;
+        serializer.TryDeserialize(FullSerializer.fsJsonParser.Parse(File.ReadAllText(
+            Path.Combine(root, "SpriteSoundFramework.dfmod.json"))), ref info).AssertSuccess();
+        if (info.ModVersion != "1.4.2" || info.Dependencies.Length != 1)
+            throw new Exception("Incorrect version/dependency count.");
+        var dependency = info.Dependencies[0];
+        if (dependency.Name != "daggerfall.harmony" || dependency.IsOptional ||
+            dependency.IsPeer || dependency.Version != null)
+            throw new Exception("Dependency flags/version did not deserialize correctly.");
+        Console.WriteLine("PASS actual DFU manifest dependency deserialization");
+
+        ModSettingsData settings = null;
+        serializer.TryDeserialize(FullSerializer.fsJsonParser.Parse(File.ReadAllText(
+            Path.Combine(root, "modsettings.json"))), ref settings).AssertSuccess();
+        var key = settings["Options"]["Enable Mod Logging"] as ToggleKey;
+        if (key == null || key.Value || key.Description !=
+            "Creates separate log file directory in the Mods Folder under 'SSF/Logs'. Used for diagnosing issues with the mod.")
+            throw new Exception("Logging toggle schema changed.");
+        Console.WriteLine("PASS actual DFU logging toggle schema and default");
+    }
+}

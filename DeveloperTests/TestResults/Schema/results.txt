@@ -1,0 +1,2 @@
+﻿PASS actual DFU manifest dependency deserialization
+PASS actual DFU logging toggle schema and default

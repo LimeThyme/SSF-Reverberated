@@ -1,0 +1,17 @@
+﻿PASS missing dependency produces error without discovery
+PASS disabled dependency rejected
+PASS wrong load order rejected
+PASS old provider version rejected
+PASS missing provider type rejected
+PASS disabled provider rejected
+PASS duplicate provider rejected
+PASS provider lost during barrier rejected
+PASS library provider mismatch rejected
+PASS cleanup precedes installation; hooks survive before discovery
+PASS real vanilla postfix clears replacement identity
+PASS absent NPCFR is reported as optional
+PASS duplicate patch init keeps one owned postfix
+PASS shutdown preserves another owner's real patch
+PASS late hook removal blocks discovery
+PASS destroy clears session and permits next boot
+16 migration checks passed using real Harmony 2.4.2.0

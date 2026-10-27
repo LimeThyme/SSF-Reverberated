@@ -1,0 +1,88 @@
+// Test stand-ins model DFU/Unity lifecycle. Harmony itself is the real 2.4.2 library.
+// These tests cannot prove Unity frame order or platform audio; see the manual matrix.
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using HarmonyLib;
+using SpriteSoundFramework;
+using DaggerfallWorkshop.Game.Utility.ModSupport;
+namespace UnityEngine {
+ public class Object {
+  public static List<Object> Objects=new List<Object>();
+  public static Object[] FindObjectsOfType(Type t){return Objects.Where(x=>t.IsInstanceOfType(x)).ToArray();}
+  public static void Destroy(Object x){Objects.Remove(x);if(x is Component)((Component)x).gameObject.Components.Remove((Component)x);}
+ }
+ public class GameObject:Object { public List<Component> Components=new List<Component>();
+  public T AddComponent<T>() where T:Component,new(){var t=new T();t.gameObject=this;Components.Add(t);Objects.Add(t);return t;}
+  public T GetComponent<T>() where T:Component{return Components.OfType<T>().FirstOrDefault();}
+ }
+ public class Component:Object {public GameObject gameObject;}
+ public class MonoBehaviour:Component {public bool isActiveAndEnabled=true;}
+ public struct Vector2{}
+ public class Texture2D:Object{}
+}
+namespace DaggerfallWorkshop {
+ public class DaggerfallBillboard:UnityEngine.MonoBehaviour {
+  [MethodImpl(MethodImplOptions.NoInlining)] public void SetMaterial(int a,int b,int c) {Ticks++;}
+  public int Ticks;
+ }
+}
+#if NPCFR
+namespace FlatReplacer {public class ReplacementBillboard:UnityEngine.MonoBehaviour {
+ [MethodImpl(MethodImplOptions.NoInlining)] public void SetMaterial(string namePrefix,UnityEngine.Vector2 v,UnityEngine.Texture2D[] t,int a,int b,bool c){} }
+}
+#endif
+namespace DaggerfallWorkshop.Game.Utility.ModSupport {
+ public class ModInfo {public string ModVersion="2.4.2.2";}
+ public class Mod {public string FileName; public bool Enabled=true,IsReady; public int LoadPriority;public ModInfo ModInfo=new ModInfo();public bool MissingType,BadReference;
+  public Type GetCompiledType(string n){if(MissingType)return null;return n.EndsWith("SubModule")?typeof(Provider):BadReference?typeof(object):typeof(ProviderRef);}}
+ public class ModManager {public static ModManager Instance=new ModManager(); public Mod[] Mods; public Mod[] GetAllMods(){return Mods;}}
+}
+class Provider:UnityEngine.MonoBehaviour {}
+class ProviderRef:Harmony {public ProviderRef():base("test.provider"){} }
+namespace SpriteSoundFramework {
+ public class SpriteSoundIdentity:UnityEngine.MonoBehaviour {public string SoundKey;}
+ public class SpriteSoundHook:UnityEngine.MonoBehaviour {}
+ public static class SpriteSoundLog {public static List<string> Messages=new List<string>();public static void Info(string x){Messages.Add(x);}public static void Warning(string x){Messages.Add(x);}public static void Error(string x){Messages.Add(x);}public static void EndSession(){}}
+}
+class HarmonyMigrationTests {
+ static int passed; static Mod owner,dependency; static Provider provider;static SpriteSoundHarmonyBootstrap boot;
+ static void Check(bool value,string message){if(!value)throw new Exception(message);}
+ static IEnumerator Setup(){SpriteSound_NPCFRPatch.Shutdown();UnityEngine.Object.Objects.Clear();SpriteSoundLog.Messages.Clear();
+  owner=new Mod{FileName="ssf",LoadPriority=1};dependency=new Mod{FileName="daggerfall.harmony",LoadPriority=0};
+  ModManager.Instance.Mods=new[]{dependency,owner};provider=new UnityEngine.GameObject().AddComponent<Provider>();
+  boot=new UnityEngine.GameObject().AddComponent<SpriteSoundHarmonyBootstrap>();boot.Configure(owner);return boot.Start();}
+ static void Test(string name,Action body){body();Console.WriteLine("PASS "+name);passed++;}
+ static bool Hook(){return boot.gameObject.GetComponent<SpriteSoundHook>()!=null;}
+ static void Rejected(IEnumerator r){Check(!r.MoveNext(),"unexpected startup yield");Check(!owner.IsReady&&!Hook(),"discovery ran on failure");Check(SpriteSoundLog.Messages.Any(x=>x.Contains("startup failed")),"missing failure notice");}
+ public static void OtherPostfix(){}
+ static void Main(){
+ Test("missing dependency produces error without discovery",()=>{var r=Setup();ModManager.Instance.Mods=new[]{owner};Rejected(r);});
+ Test("disabled dependency rejected",()=>{var r=Setup();dependency.Enabled=false;Rejected(r);});
+ Test("wrong load order rejected",()=>{var r=Setup();dependency.LoadPriority=2;Rejected(r);});
+ Test("old provider version rejected",()=>{var r=Setup();dependency.ModInfo.ModVersion="2.4.2.1";Rejected(r);});
+ Test("missing provider type rejected",()=>{var r=Setup();dependency.MissingType=true;Rejected(r);});
+ Test("disabled provider rejected",()=>{var r=Setup();provider.isActiveAndEnabled=false;Rejected(r);});
+ Test("duplicate provider rejected",()=>{var r=Setup();new UnityEngine.GameObject().AddComponent<Provider>();Rejected(r);});
+ Test("provider lost during barrier rejected",()=>{var r=Setup();Check(r.MoveNext(),"missing frame barrier");provider.isActiveAndEnabled=false;Rejected(r);});
+ Test("library provider mismatch rejected",()=>{var r=Setup();dependency.BadReference=true;Check(r.MoveNext(),"missing barrier");Rejected(r);});
+ Test("cleanup precedes installation; hooks survive before discovery",()=>{var r=Setup();Check(r.MoveNext()&&!Hook()&&!SpriteSound_NPCFRPatch.VerifyInstalled(),"patched too early");
+ new Harmony("test.cleanup").UnpatchAll(); // Deliberately models the dependency's global startup cleanup.
+ Check(r.MoveNext()&&!Hook()&&SpriteSound_NPCFRPatch.VerifyInstalled(),"not installed behind barrier");
+ Check(!r.MoveNext()&&Hook()&&owner.IsReady,"did not become ready");});
+ Test("real vanilla postfix clears replacement identity",()=>{var go=new UnityEngine.GameObject();go.AddComponent<SpriteSoundIdentity>().SoundKey="old";go.AddComponent<DaggerfallWorkshop.DaggerfallBillboard>().SetMaterial(1,2,3);Check(go.GetComponent<SpriteSoundIdentity>()==null,"identity remained");});
+#if NPCFR
+ Test("real optional NPCFR postfix saves identity",()=>{var go=new UnityEngine.GameObject();go.AddComponent<FlatReplacer.ReplacementBillboard>().SetMaterial("npc-key",new UnityEngine.Vector2(),null,0,0,false);Check(go.GetComponent<SpriteSoundIdentity>().SoundKey=="npc-key","key not saved");});
+#else
+ Test("absent NPCFR is reported as optional",()=>{Check(SpriteSoundLog.Messages.Any(x=>x.Contains("NPCFR=absent")),"absent notice missing");});
+#endif
+ Test("duplicate patch init keeps one owned postfix",()=>{Check(SpriteSound_NPCFRPatch.Init(dependency),"repeat init failed");var m=typeof(DaggerfallWorkshop.DaggerfallBillboard).GetMethod("SetMaterial");Check(Harmony.GetPatchInfo(m).Postfixes.Count(x=>x.owner=="com.spritesound.npcfr_fix")==1,"duplicate hook");});
+ Test("shutdown preserves another owner's real patch",()=>{var h=new Harmony("other.mod");var m=typeof(DaggerfallWorkshop.DaggerfallBillboard).GetMethod("SetMaterial");h.Patch(m,postfix:new HarmonyMethod(typeof(HarmonyMigrationTests).GetMethod("OtherPostfix")));SpriteSound_NPCFRPatch.Shutdown();Check(Harmony.GetPatchInfo(m).Owners.Contains("other.mod"),"other owner removed");h.UnpatchAll("other.mod");});
+ Test("late hook removal blocks discovery",()=>{var r=Setup();Check(r.MoveNext()&&r.MoveNext(),"did not install");new Harmony("test.cleanup").UnpatchAll();Rejected(r);});
+ Test("destroy clears session and permits next boot",()=>{var r=Setup();while(r.MoveNext()){}typeof(SpriteSoundHarmonyBootstrap).GetMethod("OnDestroy",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(boot,null);Check(!SpriteSoundHarmonyBootstrap.IsRunning&&!owner.IsReady&&!SpriteSound_NPCFRPatch.VerifyInstalled(),"shutdown leaked state");});
+ Console.WriteLine(passed+" migration checks passed using real Harmony "+typeof(Harmony).Assembly.GetName().Version);
+ }
+}

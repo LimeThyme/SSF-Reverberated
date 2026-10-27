@@ -1,0 +1,20 @@
+PASS shared intersection and exact scheduled start
+PASS nearby bands respect labels, distant bands stay independent
+PASS no chain grouping between stages
+PASS disjoint playlists stay silent with one diagnostic
+PASS pause freezes cursor, resume schedules together
+PASS pause before scheduled start retains zero cursor
+PASS range re-entry seeks song and does not restart bandmate
+PASS shared song changes once after completion
+PASS length mismatch rejected before any playback
+PASS loading barrier and load completion during pause
+PASS reset cancels pending request and obsolete members
+PASS load error is bounded and group blocked
+PASS identity change does not stop replacement owner
+PASS small existing WAV padding difference is accepted
+PASS new member removes unavailable song from whole band
+PASS unexpected stop rejoins clock without restarting peers
+PASS timeout disposes load and bounds retries
+PASS world reset cancels already scheduled starts
+PASS logging disabled leaves ensemble playback unchanged
+19 conductor tests passed.
