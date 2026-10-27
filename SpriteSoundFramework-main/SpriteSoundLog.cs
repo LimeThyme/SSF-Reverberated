@@ -155,10 +155,10 @@ namespace SpriteSoundFramework
                 // directory or a hard-coded AppData/StreamingAssets location.
                 if (string.IsNullOrWhiteSpace(modDirectory))
                     throw new InvalidOperationException("DFU did not provide the mod directory.");
-                string folder = Path.Combine(Path.GetFullPath(modDirectory), "SSF", "Logs");
+                string folder = Path.Combine(Path.GetFullPath(modDirectory), "Logs", "SSF");
                 Directory.CreateDirectory(folder);
-                string current = Path.Combine(folder, "SSF.log");
-                string previous = Path.Combine(folder, "SSF-prev.log");
+                string current = Path.Combine(folder, "ssf.log");
+				string previous = Path.Combine(folder, "ssf-prev.log");
 
                 // Acquire the current file before rotating. A second game instance
                 // cannot replace the previous log while the first is still writing.
