@@ -1,4 +1,4 @@
-# Reverberated 1.4.2 candidate source
+# Reverberated 1.4.2 Source
 
 Read the package-level README.md and HARMONY-MIGRATION.md before building.
 This version requires daggerfall.harmony.dfmod and an explicit build-time Harmony
