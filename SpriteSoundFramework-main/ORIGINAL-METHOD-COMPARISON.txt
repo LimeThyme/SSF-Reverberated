@@ -1,87 +1,215 @@
-Syntax comparison ignores comments/formatting. LOG ROUTING normalizes only SSF logger calls back to Unity Debug. This lists methods, not fields/attributes; consult SOURCE-CHANGES.md for those.
+SPRITE SOUND FRAMEWORK - REVERBERATED
+ORIGINAL 1.1 TO CURRENT 1.4.2 SOURCE COMPARISON
+Updated: November 1, 2026
+
+SCOPE AND EVIDENCE
+This replaces the older method comparison in a separate copy. The supplied document and game/project files were not edited.
+Baseline: seven preserved source files extracted from the original 1.1 archive. All seven SHA-256 hashes match the recorded original ZIP source hashes in EARLY-HISTORY-EVIDENCE.json. The original archive path is no longer available; this review uses those verified extracted files.
+Target: the ten C# files beside the supplied ORIGINAL-METHOD-COMPARISON.txt in the SSF-Reverberated-1.4.2 project folder, read on the date above. Its manifest says 1.4.2. This is a source comparison, not proof that any installed .dfmod contains these exact files.
+See COMPARISON-EVIDENCE.json for exact paths, hashes and per-file change counts.
+
+HOW TO READ THE RESULTS
+UNCHANGED: identical C# tokens, ignoring comments and whitespace.
+LOG ROUTING: identical tokens after replacing SpriteSoundLog.Info/Warning/Error calls with Debug.Log/LogWarning/LogError. Routing can change where and when messages appear; it does not mean the logging behavior is identical.
+CHANGED: other C# tokens differ. This classification alone does not establish a runtime bug or improvement.
+ADDED / REMOVED: a method signature exists on only one side. A changed signature appears as a removal plus an addition, even when it replaces the same job.
+Line numbers point to declarations in the exact source snapshots recorded here. Parameter modifiers such as out are included.
+The inventory includes every MethodDeclarationSyntax node in both sets, including methods in entirely new files. Constructors, fields, properties, attributes, imports, nested types, comments and formatting are covered by the full source diff, not classified as methods.
+SOURCE-CHANGES-1.1-to-1.4.2.diff records every line addition/removal in all ten C# files, including comments. It is intentionally more detailed than the plain-language explanation.
+DOCUMENT-UPDATE.diff records every edit from the supplied comparison document to this updated copy.
+
+WHAT CHANGED AND WHY
+
+SpriteSound_DFUIntegration.cs
+Init now establishes the optional logger/settings and starts a persistent Harmony bootstrap. It leaves the mod unready until startup checks finish and avoids duplicate startup. The original initialized its patches and discovery directly.
+ApplySettings is new and applies the logging checkbox without restarting playback. SpriteSoundHook.OnDestroy adds logger cleanup.
+Attach leaves an existing same-key emitter alone so repeated discovery cannot restart it, while a changed key still triggers initialization.
+The scanner's event handlers, scan routines, manager creation and scan timing methods remain token-identical to 1.1. Discovery itself is inherited, not a new feature.
+
+SpriteSound_NPCFRPatch.cs
+This file is no longer LOG ROUTING ONLY. The loose-DLL loader and reflected Harmony overload selection were replaced in 1.4.2.
+Init() is replaced by Init(Mod). It verifies the dependency's HarmonyRef derives from the same Harmony type, requires exactly one loaded 0Harmony assembly with version 2.4.2.0, and installs the required vanilla cleanup patch before considering optional NPC Flat Replacer support.
+GetHarmonyPatchMethod() is removed. PatchTarget(MethodInfo,Assembly,MethodInfo,MethodInfo) is replaced by PatchTarget(MethodInfo,string), which calls Harmony directly and records installed targets.
+VerifyInstalled checks that every recorded target still has an SSF-owned postfix declared by this patch class. It does not compare each postfix method name and is not continuous monitoring after startup.
+Shutdown removes patches for SSF's owner ID only and clears its tracking state. It does not globally remove other mods' patches.
+NoInlining attributes on the Harmony entry methods help keep library binding out of early dependency checks. A typed Harmony instance and installed-target list replace reflective state.
+FindType and both identity postfixes remain token-identical to 1.1. Replacement prefixes are still saved as sound identities, and vanilla material assignment still schedules removal of stale identities.
+
+SpriteSoundHarmonyBootstrap.cs - entirely new
+Configure records the owning mod and startup instance. IsRunning exposes whether a bootstrap instance exists.
+TryGetDependency checks the exact dependency filename, enabled state, load order and provider version of at least 2.4.2.2. The actual Harmony library version is checked separately in the patch helper.
+Start requires one active provider component, waits one frame for its Start cleanup opportunity, installs patches, then waits another frame and checks that they remain installed. Only then does it attach discovery and mark SSF ready.
+This ordering follows the reviewed provider's synchronous Start cleanup. It is not a general guarantee for future providers with different startup behavior.
+Fail leaves SSF unready, logs the reason and requests owner-scoped patch cleanup. OnDestroy cleans up the owned session, readiness state, singleton reference and logger.
+
+SpriteSoundConfig.cs
+GetConfig changes only message routing; BuildJsonPath is unchanged. New musicianSyncGroup and musicianGroupRadius fields allow local grouping, with a default radius of 12 world units. These field additions are why the whole file is CHANGED even though its two methods have no other token changes.
+
+SpriteSoundEmitter.cs
+Awake creates an SSF-owned audio child and filter instead of sharing the billboard's AudioSource. Native components can no longer rewind the same source SSF is using.
+Initialize and Reactivate preserve eligible existing playback, refresh configuration/range state and hand musician playback to the ensemble system. Enabling defers the refresh; disabling and destruction stop owned work and restore native audio state.
+Playback generation numbers act as cancellation tickets. StopPlayback invalidates old work, and the guarded playlist helpers prevent an old load or coroutine cleanup from taking over a newer session.
+The original PlaylistCoroutine(string) is replaced by PlaylistCoroutine(string,int), with validity checks around loading and playback. Established fixed loops can pause outside hearing range and continue from their stored position; pending or randomized playlist work is not promised that same treatment.
+SuspendNativeAnimalAudio and RestoreNativeAnimalAudio selectively control native random playback for animal keys only when a replacement is ready, saving and restoring the previous enabled states.
+SlowSensorUpdate and the range helpers use consistent effective distance, a boundary margin and smooth outer fades for logarithmic sounds. Volume follows DFU's sound-volume setting, and UpdateVoicePriority favors nearby sources.
+HasStaticOccluder filters triggers, billboards and emitter colliders from obstruction checks; its name does not mean it checks Unity's static flag.
+SetPaused separates game pause from range suspension and guards loop starts/resumes. Playlist loading waits for an appropriate unpaused start. Frame-triggered one-shot loading has generation/range/activity checks but does not have the same post-load pause wait.
+ScheduleEnsemble and StopEnsemble expose scheduled playback to the conductor. Musician sources use fixed pitch and no Doppler; normal random selection and frame-triggered one-shots do not drive musician playback.
+TraceAnimalPlayback and voice diagnostics report playback state, timing, distance and source ownership when logging is enabled.
+Start and CheckFrameTriggers retain their original method tokens. Their callers and surrounding state changed, so token equality does not guarantee identical overall behavior.
+The original 1.1 already assigned loaded clips before playback. A missing assignment was an intermediate regression that was repaired, not a defect being attributed to the original.
+
+SpriteSoundEnsembles.cs - entirely new
+Tick drives discovery and group updates. Discover builds local groups by scene, label and pairwise distance, replacing the original single global musician timeline.
+TickBand chooses from songs shared by all members, manages loading, pauses, scheduled starts, range return, recovery and periodic diagnostic samples. Song changes are coordinated for the group.
+Position calculates the shared song position and clamps elapsed time before a scheduled start. This lets pause/resume and late arrivals use the same timeline.
+FinishLoad validates loaded parts and duration compatibility. Parts differing by over 100 milliseconds are rejected; the shortest acceptable part determines the group's end. Starts are normally scheduled 150 milliseconds ahead on Unity's audio clock.
+RejectSong marks an unusable song; DisposeLoad releases pending load work; StopSources stops the group's sources; ClearSong resets song state. Retire and Reset discard groups and obsolete work during regrouping or world transitions. Log emits group diagnostics only when enabled.
+New Band/Start state and collections store membership, shared choices, loading, scheduled timing and pause positions. Full declarations appear in the source diff.
+This coordinates playback positions, not musical composition: matching filenames/durations do not fix different arrangements, tempo, leading silence or animation timing.
+
+SpriteSoundLog.cs - entirely new
+BeginSession sets the session's mod-relative location and logging state. SetEnabled toggles diagnostics without restarting emitters. Enabled exposes whether diagnostics are enabled.
+Info, Warning and Error route messages through Write. Operational warnings/errors can still reach Unity with diagnostics disabled; ordinary diagnostic sampling is skipped when disabled.
+EnsureOpen creates Mods/Logs/SSF and uses lowercase ssf.log and ssf-prev.log in the current source. It rotates on the first enabled logging activation of a game session and appends on later activations in that session.
+Re-enabling writes a resumed-session header, not a new-session header. Leaving logging disabled for a whole session does not rotate previous logs.
+Fail handles file-writing failure with Unity-log fallback. CloseWriter releases the writer; EndSession closes the session. Old files under the former Mods/SSF/Logs path are not automatically migrated.
+Current-path observation: the manifest's description still says Mods/SSF/Logs, which disagrees with the executable logger path. This report records that mismatch without changing the manifest.
+
+SpriteSoundManager.cs
+Awake adds logging of audio-device settings. BuildIndices changes only log routing; indexing and caching are inherited behavior.
+Update drives the local ensemble conductor alongside pause forwarding. OnDestroy and ResetMusicianTrack reset ensemble state and obsolete work.
+PickRandomMusicianTrack and PickRandomFromIndex are removed. MusicianSongs exposes the available song suffixes for intersection by the conductor; PickRandomVariant no longer changes global musician state for ordinary random sounds.
+Registration, clip caching, file lookup, attachment eligibility and path construction methods remain token-identical to 1.1. Global musician state is replaced by the ensemble system; new fields and removed declarations are recorded in the full diff.
+
+SpriteSoundIdentity.cs and SpriteSoundKeyResolver.cs
+Both files are token-identical to 1.1. Comments and formatting may differ. Identity storage and lookup order remain inherited behavior.
+
+PACKAGE CONTEXT AND LIMITS
+The current manifest declares the required daggerfall.harmony dependency and version 1.4.2; modsettings.json provides the logging checkbox. These are supporting configuration changes, not C# methods.
+This review parses C# syntax and compares source tokens; it does not compile the mod, build platform bundles, inspect binary contents or run gameplay. Earlier gameplay results are separate evidence and are not rerun by this documentation update.
+
+COMPLETE METHOD INVENTORY
+
+SpriteSound_DFUIntegration.cs: CHANGED
+  CHANGED SpriteSound_DFUIntegration.Init(InitParams) [1.1 line 16; 1.4.2 line 31]
+  UNCHANGED SpriteSoundHook.Awake() [1.1 line 40; 1.4.2 line 68]
+  UNCHANGED SpriteSoundHook.OnEnable() [1.1 line 47; 1.4.2 line 77]
+  UNCHANGED SpriteSoundHook.OnDisable() [1.1 line 56; 1.4.2 line 88]
+  UNCHANGED SpriteSoundHook.OnSaveGameLoaded(SaveData_v1) [1.1 line 64; 1.4.2 line 103]
+  UNCHANGED SpriteSoundHook.OnTransitionInterior(PlayerEnterExit.TransitionEventArgs) [1.1 line 65; 1.4.2 line 104]
+  UNCHANGED SpriteSoundHook.OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs) [1.1 line 66; 1.4.2 line 105]
+  UNCHANGED SpriteSoundHook.OnTransitionExterior(PlayerEnterExit.TransitionEventArgs) [1.1 line 67; 1.4.2 line 106]
+  UNCHANGED SpriteSoundHook.RestartRapidScan() [1.1 line 69; 1.4.2 line 110]
+  UNCHANGED SpriteSoundHook.RapidScanRoutine() [1.1 line 77; 1.4.2 line 120]
+  UNCHANGED SpriteSoundHook.Update() [1.1 line 86; 1.4.2 line 132]
+  UNCHANGED SpriteSoundHook.ScanAllBillboards() [1.1 line 105; 1.4.2 line 149]
+  UNCHANGED SpriteSoundHook.EnsureManager() [1.1 line 115; 1.4.2 line 162]
+  CHANGED SpriteSoundHook.Attach(GameObject) [1.1 line 125; 1.4.2 line 183]
+  ADDED SpriteSound_DFUIntegration.ApplySettings(ModSettings,ModSettingsChange) [1.1 line -; 1.4.2 line 50]
+  ADDED SpriteSoundHook.OnDestroy() [1.1 line -; 1.4.2 line 98]
+
+SpriteSound_NPCFRPatch.cs: CHANGED
+  REMOVED SpriteSound_NPCFRPatch.Init() [1.1 line 18; 1.4.2 line -]
+  REMOVED SpriteSound_NPCFRPatch.GetHarmonyPatchMethod() [1.1 line 79; 1.4.2 line -]
+  REMOVED SpriteSound_NPCFRPatch.PatchTarget(MethodInfo,Assembly,MethodInfo,MethodInfo) [1.1 line 95; 1.4.2 line -]
+  UNCHANGED SpriteSound_NPCFRPatch.FindType(string) [1.1 line 109; 1.4.2 line 118]
+  UNCHANGED SpriteSound_NPCFRPatch.Postfix_SetMaterial_NPCFR(MonoBehaviour,string) [1.1 line 125; 1.4.2 line 135]
+  UNCHANGED SpriteSound_NPCFRPatch.Postfix_SetMaterial_Vanilla(MonoBehaviour) [1.1 line 134; 1.4.2 line 148]
+  ADDED SpriteSound_NPCFRPatch.Init(Mod) [1.1 line -; 1.4.2 line 25]
+  ADDED SpriteSound_NPCFRPatch.PatchTarget(MethodInfo,string) [1.1 line -; 1.4.2 line 80]
+  ADDED SpriteSound_NPCFRPatch.VerifyInstalled() [1.1 line -; 1.4.2 line 91]
+  ADDED SpriteSound_NPCFRPatch.Shutdown() [1.1 line -; 1.4.2 line 107]
 
 SpriteSoundConfig.cs: CHANGED
-  LOG ROUTING SpriteSoundConfig.GetConfig(string)
-  UNCHANGED SpriteSoundConfig.BuildJsonPath(string)
+  LOG ROUTING SpriteSoundConfig.GetConfig(string) [1.1 line 36; 1.4.2 line 60]
+  UNCHANGED SpriteSoundConfig.BuildJsonPath(string) [1.1 line 67; 1.4.2 line 90]
 
 SpriteSoundEmitter.cs: CHANGED
-  CHANGED SpriteSoundEmitter.Awake()
-  CHANGED SpriteSoundEmitter.OnEnable()
-  UNCHANGED SpriteSoundEmitter.Start()
-  CHANGED SpriteSoundEmitter.OnDestroy()
-  CHANGED SpriteSoundEmitter.Initialize(string,bool)
-  CHANGED SpriteSoundEmitter.Reactivate()
-  REMOVED SpriteSoundEmitter.PlaylistCoroutine(string)
-  CHANGED SpriteSoundEmitter.SlowSensorUpdate()
-  CHANGED SpriteSoundEmitter.Update()
-  UNCHANGED SpriteSoundEmitter.CheckFrameTriggers(int)
-  CHANGED SpriteSoundEmitter.PlayOneShot(string)
-  CHANGED SpriteSoundEmitter.SetPaused(bool)
-  ADDED SpriteSoundEmitter.ScheduleEnsemble(AudioClip,string,double,double)
-  ADDED SpriteSoundEmitter.StopEnsemble()
-  ADDED SpriteSoundEmitter.EnsurePlayerTransform()
-  ADDED SpriteSoundEmitter.IsWithinPlaybackRange()
-  ADDED SpriteSoundEmitter.SuspendPlaybackForRange()
-  ADDED SpriteSoundEmitter.ResumePlaybackFromRange()
-  ADDED SpriteSoundEmitter.StopPlayback()
-  ADDED SpriteSoundEmitter.EnsureLoopPlayback()
-  ADDED SpriteSoundEmitter.GuardedPlaylistCoroutine(string,int)
-  ADDED SpriteSoundEmitter.PlaybackStillValid(int)
-  ADDED SpriteSoundEmitter.DeferredPlaybackRefresh()
-  ADDED SpriteSoundEmitter.OnDisable()
-  ADDED SpriteSoundEmitter.SuspendNativeAnimalAudio()
-  ADDED SpriteSoundEmitter.RestoreNativeAnimalAudio()
-  ADDED SpriteSoundEmitter.PlaylistCoroutine(string,int)
-  ADDED SpriteSoundEmitter.HasStaticOccluder(Vector3,Vector3)
-  ADDED SpriteSoundEmitter.UpdateVoicePriority(float)
-  ADDED SpriteSoundEmitter.GetDistanceManagedVolume(float)
-  ADDED SpriteSoundEmitter.TraceAnimalPlayback(string)
+  CHANGED SpriteSoundEmitter.Awake() [1.1 line 39; 1.4.2 line 179]
+  CHANGED SpriteSoundEmitter.OnEnable() [1.1 line 58; 1.4.2 line 337]
+  UNCHANGED SpriteSoundEmitter.Start() [1.1 line 67; 1.4.2 line 366]
+  CHANGED SpriteSoundEmitter.OnDestroy() [1.1 line 75; 1.4.2 line 376]
+  CHANGED SpriteSoundEmitter.Initialize(string,bool) [1.1 line 79; 1.4.2 line 437]
+  CHANGED SpriteSoundEmitter.Reactivate() [1.1 line 124; 1.4.2 line 506]
+  REMOVED SpriteSoundEmitter.PlaylistCoroutine(string) [1.1 line 152; 1.4.2 line -]
+  CHANGED SpriteSoundEmitter.SlowSensorUpdate() [1.1 line 261; 1.4.2 line 652]
+  CHANGED SpriteSoundEmitter.Update() [1.1 line 308; 1.4.2 line 777]
+  UNCHANGED SpriteSoundEmitter.CheckFrameTriggers(int) [1.1 line 330; 1.4.2 line 804]
+  CHANGED SpriteSoundEmitter.PlayOneShot(string) [1.1 line 346; 1.4.2 line 828]
+  CHANGED SpriteSoundEmitter.SetPaused(bool) [1.1 line 370; 1.4.2 line 944]
+  ADDED SpriteSoundEmitter.ScheduleEnsemble(AudioClip,string,double,double) [1.1 line -; 1.4.2 line 83]
+  ADDED SpriteSoundEmitter.StopEnsemble() [1.1 line -; 1.4.2 line 95]
+  ADDED SpriteSoundEmitter.EnsurePlayerTransform() [1.1 line -; 1.4.2 line 197]
+  ADDED SpriteSoundEmitter.IsWithinPlaybackRange() [1.1 line -; 1.4.2 line 210]
+  ADDED SpriteSoundEmitter.SuspendPlaybackForRange() [1.1 line -; 1.4.2 line 223]
+  ADDED SpriteSoundEmitter.ResumePlaybackFromRange() [1.1 line -; 1.4.2 line 246]
+  ADDED SpriteSoundEmitter.StopPlayback() [1.1 line -; 1.4.2 line 275]
+  ADDED SpriteSoundEmitter.EnsureLoopPlayback() [1.1 line -; 1.4.2 line 297]
+  ADDED SpriteSoundEmitter.GuardedPlaylistCoroutine(string,int) [1.1 line -; 1.4.2 line 311]
+  ADDED SpriteSoundEmitter.PlaybackStillValid(int) [1.1 line -; 1.4.2 line 326]
+  ADDED SpriteSoundEmitter.DeferredPlaybackRefresh() [1.1 line -; 1.4.2 line 346]
+  ADDED SpriteSoundEmitter.OnDisable() [1.1 line -; 1.4.2 line 356]
+  ADDED SpriteSoundEmitter.SuspendNativeAnimalAudio() [1.1 line -; 1.4.2 line 390]
+  ADDED SpriteSoundEmitter.RestoreNativeAnimalAudio() [1.1 line -; 1.4.2 line 415]
+  ADDED SpriteSoundEmitter.PlaylistCoroutine(string,int) [1.1 line -; 1.4.2 line 557]
+  ADDED SpriteSoundEmitter.HasStaticOccluder(Vector3,Vector3) [1.1 line -; 1.4.2 line 746]
+  ADDED SpriteSoundEmitter.UpdateVoicePriority(float) [1.1 line -; 1.4.2 line 863]
+  ADDED SpriteSoundEmitter.GetDistanceManagedVolume(float) [1.1 line -; 1.4.2 line 882]
+  ADDED SpriteSoundEmitter.TraceAnimalPlayback(string) [1.1 line -; 1.4.2 line 907]
+
+SpriteSoundEnsembles.cs: ADDED FILE
+  ADDED SpriteSoundEnsembles.Tick(IEnumerable<SpriteSoundEmitter>,bool) [1.1 line -; 1.4.2 line 66]
+  ADDED SpriteSoundEnsembles.Discover(IEnumerable<SpriteSoundEmitter>,double) [1.1 line -; 1.4.2 line 96]
+  ADDED SpriteSoundEnsembles.TickBand(Band,double,bool) [1.1 line -; 1.4.2 line 144]
+  ADDED SpriteSoundEnsembles.Position(Band,double) [1.1 line -; 1.4.2 line 262]
+  ADDED SpriteSoundEnsembles.FinishLoad(Band) [1.1 line -; 1.4.2 line 268]
+  ADDED SpriteSoundEnsembles.RejectSong(Band,string) [1.1 line -; 1.4.2 line 294]
+  ADDED SpriteSoundEnsembles.DisposeLoad(Band) [1.1 line -; 1.4.2 line 305]
+  ADDED SpriteSoundEnsembles.StopSources(Band) [1.1 line -; 1.4.2 line 316]
+  ADDED SpriteSoundEnsembles.ClearSong(Band) [1.1 line -; 1.4.2 line 327]
+  ADDED SpriteSoundEnsembles.Log(Band,string,string) [1.1 line -; 1.4.2 line 341]
+  ADDED SpriteSoundEnsembles.Retire(Band,string) [1.1 line -; 1.4.2 line 350]
+  ADDED SpriteSoundEnsembles.Reset(string) [1.1 line -; 1.4.2 line 355]
+
+SpriteSoundHarmonyBootstrap.cs: ADDED FILE
+  ADDED SpriteSoundHarmonyBootstrap.Configure(Mod) [1.1 line -; 1.4.2 line 23]
+  ADDED SpriteSoundHarmonyBootstrap.Start() [1.1 line -; 1.4.2 line 32]
+  ADDED SpriteSoundHarmonyBootstrap.TryGetDependency(out Mod,out string) [1.1 line -; 1.4.2 line 108]
+  ADDED SpriteSoundHarmonyBootstrap.Fail(string) [1.1 line -; 1.4.2 line 141]
+  ADDED SpriteSoundHarmonyBootstrap.OnDestroy() [1.1 line -; 1.4.2 line 150]
 
 SpriteSoundIdentity.cs: UNCHANGED CODE
 
 SpriteSoundKeyResolver.cs: UNCHANGED CODE
-  UNCHANGED SpriteSoundKeyResolver.ResolveKeyFromGameObject(GameObject)
+  UNCHANGED SpriteSoundKeyResolver.ResolveKeyFromGameObject(GameObject) [1.1 line 13; 1.4.2 line 29]
+
+SpriteSoundLog.cs: ADDED FILE
+  ADDED SpriteSoundLog.BeginSession(string,bool) [1.1 line -; 1.4.2 line 43]
+  ADDED SpriteSoundLog.SetEnabled(bool) [1.1 line -; 1.4.2 line 65]
+  ADDED SpriteSoundLog.Info(string) [1.1 line -; 1.4.2 line 85]
+  ADDED SpriteSoundLog.Warning(string) [1.1 line -; 1.4.2 line 86]
+  ADDED SpriteSoundLog.Error(string) [1.1 line -; 1.4.2 line 87]
+  ADDED SpriteSoundLog.EndSession() [1.1 line -; 1.4.2 line 92]
+  ADDED SpriteSoundLog.Write(string,string) [1.1 line -; 1.4.2 line 109]
+  ADDED SpriteSoundLog.EnsureOpen() [1.1 line -; 1.4.2 line 147]
+  ADDED SpriteSoundLog.Fail(Exception) [1.1 line -; 1.4.2 line 197]
+  ADDED SpriteSoundLog.CloseWriter() [1.1 line -; 1.4.2 line 205]
 
 SpriteSoundManager.cs: CHANGED
-  CHANGED SpriteSoundManager.Awake()
-  LOG ROUTING SpriteSoundManager.BuildIndices()
-  CHANGED SpriteSoundManager.OnDestroy()
-  CHANGED SpriteSoundManager.Update()
-  UNCHANGED SpriteSoundManager.RegisterEmitter(SpriteSoundEmitter)
-  UNCHANGED SpriteSoundManager.UnregisterEmitter(SpriteSoundEmitter)
-  UNCHANGED SpriteSoundManager.TryGetCachedClip(string,AudioClip)
-  UNCHANGED SpriteSoundManager.CacheClip(string,AudioClip)
-  UNCHANGED SpriteSoundManager.HasSoundFile(string)
-  UNCHANGED SpriteSoundManager.ShouldAttachEmitter(string)
-  UNCHANGED SpriteSoundManager.BuildFullPathForKey(string)
-  REMOVED SpriteSoundManager.PickRandomMusicianTrack(string)
-  CHANGED SpriteSoundManager.PickRandomVariant(string)
-  REMOVED SpriteSoundManager.PickRandomFromIndex(string)
-  CHANGED SpriteSoundManager.ResetMusicianTrack()
-  ADDED SpriteSoundManager.MusicianSongs(string)
-
-SpriteSound_DFUIntegration.cs: CHANGED
-  CHANGED SpriteSound_DFUIntegration.Init(InitParams)
-  UNCHANGED SpriteSoundHook.Awake()
-  UNCHANGED SpriteSoundHook.OnEnable()
-  UNCHANGED SpriteSoundHook.OnDisable()
-  UNCHANGED SpriteSoundHook.OnSaveGameLoaded(SaveData_v1)
-  UNCHANGED SpriteSoundHook.OnTransitionInterior(PlayerEnterExit.TransitionEventArgs)
-  UNCHANGED SpriteSoundHook.OnTransitionDungeonInterior(PlayerEnterExit.TransitionEventArgs)
-  UNCHANGED SpriteSoundHook.OnTransitionExterior(PlayerEnterExit.TransitionEventArgs)
-  UNCHANGED SpriteSoundHook.RestartRapidScan()
-  UNCHANGED SpriteSoundHook.RapidScanRoutine()
-  UNCHANGED SpriteSoundHook.Update()
-  UNCHANGED SpriteSoundHook.ScanAllBillboards()
-  UNCHANGED SpriteSoundHook.EnsureManager()
-  CHANGED SpriteSoundHook.Attach(GameObject)
-  ADDED SpriteSound_DFUIntegration.ApplySettings(ModSettings,ModSettingsChange)
-  ADDED SpriteSoundHook.OnDestroy()
-
-SpriteSound_NPCFRPatch.cs: LOG ROUTING ONLY
-  LOG ROUTING SpriteSound_NPCFRPatch.Init()
-  UNCHANGED SpriteSound_NPCFRPatch.GetHarmonyPatchMethod()
-  UNCHANGED SpriteSound_NPCFRPatch.PatchTarget(MethodInfo,Assembly,MethodInfo,MethodInfo)
-  UNCHANGED SpriteSound_NPCFRPatch.FindType(string)
-  UNCHANGED SpriteSound_NPCFRPatch.Postfix_SetMaterial_NPCFR(MonoBehaviour,string)
-  UNCHANGED SpriteSound_NPCFRPatch.Postfix_SetMaterial_Vanilla(MonoBehaviour)
+  CHANGED SpriteSoundManager.Awake() [1.1 line 28; 1.4.2 line 41]
+  LOG ROUTING SpriteSoundManager.BuildIndices() [1.1 line 42; 1.4.2 line 63]
+  CHANGED SpriteSoundManager.OnDestroy() [1.1 line 71; 1.4.2 line 92]
+  CHANGED SpriteSoundManager.Update() [1.1 line 77; 1.4.2 line 104]
+  UNCHANGED SpriteSoundManager.RegisterEmitter(SpriteSoundEmitter) [1.1 line 89; 1.4.2 line 118]
+  UNCHANGED SpriteSoundManager.UnregisterEmitter(SpriteSoundEmitter) [1.1 line 94; 1.4.2 line 126]
+  UNCHANGED SpriteSoundManager.TryGetCachedClip(string,out AudioClip) [1.1 line 99; 1.4.2 line 134]
+  UNCHANGED SpriteSoundManager.CacheClip(string,AudioClip) [1.1 line 104; 1.4.2 line 141]
+  UNCHANGED SpriteSoundManager.HasSoundFile(string) [1.1 line 109; 1.4.2 line 149]
+  UNCHANGED SpriteSoundManager.ShouldAttachEmitter(string) [1.1 line 114; 1.4.2 line 156]
+  UNCHANGED SpriteSoundManager.BuildFullPathForKey(string) [1.1 line 119; 1.4.2 line 163]
+  REMOVED SpriteSoundManager.PickRandomMusicianTrack(string) [1.1 line 125; 1.4.2 line -]
+  CHANGED SpriteSoundManager.PickRandomVariant(string) [1.1 line 133; 1.4.2 line 184]
+  REMOVED SpriteSoundManager.PickRandomFromIndex(string) [1.1 line 138; 1.4.2 line -]
+  CHANGED SpriteSoundManager.ResetMusicianTrack() [1.1 line 166; 1.4.2 line 192]
+  ADDED SpriteSoundManager.MusicianSongs(string) [1.1 line -; 1.4.2 line 172]
