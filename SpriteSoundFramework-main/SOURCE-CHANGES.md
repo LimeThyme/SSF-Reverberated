@@ -2,7 +2,7 @@
 
 The earlier original-source comparison is preserved in [SOURCE-CHANGES-1.4.1.md](SOURCE-CHANGES-1.4.1.md).
 Its descriptions of loose DLL loading and reflective Harmony calls are historical.
-Read ../HARMONY-MIGRATION.md for the current implementation and troubleshooting.
+Read [../HARMONY-MIGRATION.md](../HARMONY-MIGRATION.md) for the current implementation and troubleshooting.
 
 - SpriteSound_DFUIntegration.cs starts a bootstrap after loading the logging option;
   duplicate entry-point calls do not open a second session. It marks SSF unready
