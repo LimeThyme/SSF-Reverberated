@@ -1,6 +1,6 @@
 # Current source changes: 1.4.1 to 1.4.2 candidate
 
-The earlier original-source comparison is preserved in SOURCE-CHANGES-1.4.1.md.
+The earlier original-source comparison is preserved in [SOURCE-CHANGES-1.4.1.md](SOURCE-CHANGES-1.4.1.md).
 Its descriptions of loose DLL loading and reflective Harmony calls are historical.
 Read ../HARMONY-MIGRATION.md for the current implementation and troubleshooting.
 
